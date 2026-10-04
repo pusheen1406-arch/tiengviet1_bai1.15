@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google" content="notranslate">
-    <title>Ôn Tập Tiếng Việt Lớp 1 bài 1 - 15 tập 1</title>
+    <title>Ôn Tập Tiếng Việt Lớp 1 (Bài 1 - 80)</title>
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -43,6 +43,14 @@
             40% { content: '..'; }
             60%, 100% { content: '...'; }
         }
+.word-done { color:#059669; background:#d1fae5; border-radius:.5rem; padding:0 .15rem; animation:popWord .35s; }
+        .word-cur { background:#fde68a; border-radius:.5rem; padding:0 .15rem; animation:curPulse 1s infinite; }
+        .word-todo { color:#475569; }
+        @keyframes popWord { 0%{transform:scale(.8)} 60%{transform:scale(1.25)} 100%{transform:scale(1)} }
+        @keyframes curPulse { 50%{ box-shadow:0 0 0 6px rgba(250,204,21,.45); } }
+        .flower-fall { position:absolute; top:-60px; animation-name:flowerFall; animation-timing-function:linear; animation-fill-mode:forwards; }
+        @keyframes flowerFall { to { transform:translateY(115vh) rotate(540deg) translateX(40px); } }
+        .p3-input::placeholder { font-size: 1.5rem; font-weight: 700; }
     </style>
 </head>
 <body class="p-2 sm:p-6 min-h-screen">
@@ -52,89 +60,1416 @@
         const { useState, useEffect, useRef } = React;
 
         const ADMIN_PASSWORD_DEFAULT = "2002";
-        const STORAGE_KEY_DATA = "tv1_review_app_data_v7";
-        const STORAGE_KEY_PASS = "tv1_review_admin_pass_v7";
-        const STORAGE_KEY_HISTORY = "tv1_review_history_v7";
+        const STORAGE_KEY_DATA = "tv1_review_app_data_v17_" + (localStorage.getItem('tv1_cluster') || '1-15');
+        const STORAGE_KEY_PASS = "tv1_review_admin_pass_v17_" + (localStorage.getItem('tv1_cluster') || '1-15');
+        const STORAGE_KEY_HISTORY = "tv1_review_history_v17_" + (localStorage.getItem('tv1_cluster') || '1-15');
         // KEY lưu trữ cài đặt điểm số
-        const STORAGE_KEY_PASS_THRESH = "tv1_review_pass_thresh_v7";
-        const STORAGE_KEY_PERFECT_THRESH = "tv1_review_perfect_thresh_v7";
+        const STORAGE_KEY_PASS_THRESH = "tv1_review_pass_thresh_v17_" + (localStorage.getItem('tv1_cluster') || '1-15');
+        const STORAGE_KEY_PERFECT_THRESH = "tv1_review_perfect_thresh_v17_" + (localStorage.getItem('tv1_cluster') || '1-15');
 
-        const cleanStr = (str) => str ? str.toLowerCase().replace(/[.,!?]/g, "").trim() : "";
+const cleanStr = (str) => str ? str.normalize('NFC').toLowerCase().replace(/[.,!?;:"“”‘’…\-–—()]/g, " ").replace(/\s+/g, " ").trim() : "";
 
-        const allWords = [
-            { word: "ba", spell: "bờ a ba, ba" }, { word: "bà", "spell": "bờ a ba huyền bà, bà" }, { word: "bá", "spell": "bờ a ba sắc bá, bá" },
-            { word: "ca", "spell": "cờ a ca, ca" }, { word: "cá", "spell": "cờ a ca sắc cá, cá" }, { word: "cà", "spell": "cờ a ca huyền cà, cà" },
-            { word: "bé", "spell": "bờ e be sắc bé, bé" }, { word: "bè", "spell": "bờ e be huyền bè, bè" }, { word: "bê", "spell": "bờ ê bê, bê" },
-            { word: "bế", "spell": "bờ ê bê sắc bế, bế" }, { word: "cô", "spell": "cờ ô cô, cô" }, { word: "cố", "spell": "cờ ô cô sắc cố, cố" },
-            { word: "cò", "spell": "cờ o co huyền cò, cò" }, { word: "bố", "spell": "bờ ô bô sắc bố, bố" }, { word: "bò", "spell": "bờ o bo huyền bò, bò" },
-            { word: "bổ", "spell": "bờ ô bô hỏi bổ, bổ" }, { word: "bộ", "spell": "bờ ô bô nặng bộ, bộ" }, { word: "da", "spell": "dờ a da, da" },
-            { word: "dạ", "spell": "dờ a da nặng dạ, dạ" }, { word: "dế", "spell": "dờ ê dê sắc dế, dế" }, { word: "đa", "spell": "đờ a đa, đa" },
-            { word: "đá", "spell": "đờ a đa sắc đá, đá" }, { word: "đỏ", "spell": "đờ o đo hỏi đỏ, đỏ" }, { word: "đò", "spell": "đờ o đo huyền đò, đò" },
-            { word: "đố", "spell": "đờ ô đô sắc đố, đố" }, { word: "cờ", "spell": "cờ ơ cơ huyền cờ, cờ" }, { word: "bơ", "spell": "bờ ơ bơ, bơ" },
-            { word: "đỡ", "spell": "đờ ơ đơ ngã đỡ, đỡ" }, { word: "cỡ", "spell": "cờ ơ cơ ngã cỡ, cỡ" }, { word: "dỡ", "spell": "dờ ơ dơ ngã dỡ, dỡ" },
-            { word: "cỗ", "spell": "cờ ô cô ngã cỗ, cỗ" }, { word: "đỗ", "spell": "đờ ô đô ngã đỗ, đỗ" }, { word: "bờ", "spell": "bờ ơ bơ huyền bờ, bờ" },
-            { word: "bi", "spell": "bờ i bi, bi" }, { word: "bí", "spell": "bờ i bi sắc bí, bí" }, { word: "kè", "spell": "ka e ke huyền kè, kè" },
-            { word: "kê", "spell": "ka ê kê, kê" }, { word: "kí", "spell": "ka i ki sắc kí, kí" }, { word: "kể", "spell": "ka ê kê hỏi kể, kể" },
-            { word: "đi", "spell": "đờ i đi, đi" }, { word: "dì", "spell": "dờ i di huyền dì, dì" }, { word: "hè", "spell": "hờ e he huyền hè, hè" },
-            { word: "hề", "spell": "hờ ê hê huyền hề, hề" }, { word: "lễ", "spell": "lờ ê lê ngã lễ, lễ" }, { word: "lè", "spell": "lờ e le huyền lè, lè" },
-            { word: "hồ", "spell": "hờ ô hô huyền hồ, hồ" }, { word: "lá", "spell": "lờ a la sắc lá, lá" }, { word: "lò", "spell": "lờ o lo huyền lò, lò" },
-            { word: "hà", "spell": "hờ a ha huyền hà, hà" }, { word: "cụ", "spell": "cờ u cu nặng cụ, cụ" }, { word: "dù", "spell": "dờ u du huyền dù, dù" },
-            { word: "đủ", "spell": "đờ u đu hỏi đủ, đủ" }, { word: "dữ", "spell": "dờ u du ngã dữ, dữ" }, { word: "cũ", "spell": "cờ u cu ngã cũ, cũ" },
-            { word: "lũ", "spell": "lờ u lu ngã lũ, lũ" }, { word: "củ", "spell": "cờ u cu hỏi củ, củ" }, { word: "bự", "spell": "bờ ư bư nặng bự, bự" },
-            { word: "chú", "spell": "chờ u chu sắc chú, chú" }, { word: "khá", "spell": "khờ a kha sắc khá, khá" }, { word: "chị", "spell": "chờ i chi nặng chị, chị" },
-            { word: "chữ", "spell": "chờ ư chư ngã chữ, chữ" }, { word: "khó", "spell": "khờ o kho sắc khó, khó" }, { word: "chè", "spell": "chờ e che huyền chè, chè" },
-            { word: "khỉ", "spell": "khờ i khi hỏi khỉ, khỉ" }, { word: "khô", "spell": "khờ ô khô, khô" },
+// Phần 3: AI đọc cả dấu câu (chấm, phẩy, chấm hỏi, chấm than, mở/đóng ngoặc kép, ba chấm, hai chấm)
+const spellPunct = (text) => text.replace(/\.{3,}|…|[.,?!:“”"]/g, (m, off, str) => {
+    if (m === '.') return ', chấm, ';
+    if (m === ',') return ', phẩy, ';
+    if (m === '?') return ', chấm hỏi, ';
+    if (m === '!') return ', chấm than, ';
+    if (m === ':') return ', hai chấm, ';
+    if (m === '…' || m.length >= 3) return ', ba chấm, ';
+    const prev = off === 0 ? ' ' : str[off - 1];
+    return /[\s:(]/.test(prev) ? ', mở ngoặc kép, ' : ', đóng ngoặc kép, ';
+});
+// Phần 3: so sánh CÓ dấu câu. Chấp nhận " thẳng thay cho “ ”, và ... thay cho …; không phân biệt hoa/thường, không quan tâm khoảng trắng cạnh dấu
+const normP3 = (str) => (str || '').normalize('NFC').toLowerCase()
+    .replace(/[“”‘’"']/g, '"').replace(/\.{3,}/g, '…')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*([.,?!:;…])/g, '$1').replace(/([.,?!:;…])(?=\S)/g, '$1 ')
+    .replace(/\s*"\s*/g, '"').replace(/\s+/g, ' ').trim();
+
+// ===== NỘI DUNG BÀI HỌC: sửa/thêm trực tiếp ở đây =====
+// words = từ đơn + từ đôi | sentences = câu | paras = đoạn (kind: "văn" hoặc "thơ", mỗi phần tử trong lines là 1 dòng/câu)
+// Cụm 1-15 và 16-30 chạy kiểu: 1. Đánh vần  2. Đọc câu  3. Nhập câu (đoạn của cụm 16-30 được cắt thành câu ở dấu chấm)
+// Cụm 31-45 trở đi chạy kiểu: 1. Đọc từ & câu  2. Đọc đoạn  3. Nhập câu
+const CLUSTER_DATA = {
+  "1-15": {
+    "words": [
+      "ba", "bà", "bá", "ca", "cá", "cà", "bé", "bè",
+      "bê", "bế", "cô", "cố", "cò", "bố", "bò", "bổ",
+      "bộ", "da", "dạ", "dế", "đa", "đá", "đỏ", "đò",
+      "đố", "cờ", "bơ", "đỡ", "cỡ", "dỡ", "cỗ", "đỗ",
+      "bờ", "bi", "bí", "kè", "kê", "kí", "kể", "đi",
+      "dì", "hè", "hề", "lễ", "lè", "hồ", "lá", "lò",
+      "hà", "cụ", "dù", "đủ", "dữ", "cũ", "lũ", "củ",
+      "bự", "chú", "khá", "chị", "chữ", "khó", "chè", "khỉ",
+      "khô", "bà ba", "ba bà", "ca ba", "ba ba", "be bé", "bề bề", "bế bé",
+      "bè bè", "ba bé", "bà bè", "bè cá", "bó cỏ", "cổ cò", "bò bê", "ca đá",
+      "đa đa", "da dẻ", "da cá", "bờ cỏ", "cờ đỏ", "cá cờ", "ô đỏ", "đo đỏ",
+      "đỗ đỏ", "dỗ bé", "đi đò", "đá kì", "bi bô", "ê ke", "kì cọ", "đi bộ",
+      "kì đà", "kề cà", "lọ hồ", "lá cọ", "lễ độ", "kì lạ", "hồ cá", "ba lô",
+      "bó hẹ", "lề hè", "đu đủ", "cá dữ", "cũ kĩ", "bé bự", "cù kì", "cự li",
+      "bà cụ", "ô dù", "chữ kí", "cá kho", "chả cá", "khe đá", "lá khô", "chè kho",
+      "khe khẽ", "chú khỉ", "kè đá", "bó kê", "chà là", "chú hề", "bò kho", "chở đò",
+      "ô li"
+    ],
+    "sentences": [
+      "A, ba ba!",
+      "Cá be bé.",
+      "Bà bế bé.",
+      "Bè be bé.",
+      "Bé bê ca.",
+      "Cô có cá, có cả cà.",
+      "Bà bế bé, cô Ba bó cỏ.",
+      "Cô có ca đá.",
+      "Bố đố bé.",
+      "Bé có cờ đỏ.",
+      "Bò, bê ở bờ đê.",
+      "Ở bờ đê có dế.",
+      "Bé có bộ đồ đỏ, ô đỏ.",
+      "Bé đi bộ ở bờ đê.",
+      "Bố kê bể cá ở kệ.",
+      "Bé có ba lô.",
+      "Bà có lá hẹ.",
+      "Bé bị ho, bà bế bé.",
+      "Bố bổ đu đủ.",
+      "Ô bà đã cũ.",
+      "Bé đi khe khẽ.",
+      "Kì đà bò ở khe đá.",
+      "Hà kẻ ô li.",
+      "Dì Lê đi chợ.",
+      "Bà có chè kho.",
+      "Bố chở bé đi Bờ Hồ."
+    ],
+    "paras": [
+    ]
+  },
+  "16-30": {
+    "words": [
+      "lọ mỡ", "no nê", "lá mơ", "cá mè", "nơ đỏ", "bó mạ", "lề mề", "ca nô",
+      "gà mẹ", "giò chả", "giá đỗ", "gia vị", "gỗ gụ", "dự giờ", "gõ mõ", "giỏ cá",
+      "ghè đá", "nhà cổ", "gồ ghề", "nhỏ nhẹ", "ghi nhớ", "nhỏ bé", "ghế gỗ", "nho khô",
+      "lá ngô", "củ nghệ", "nghỉ lễ", "ngã ba", "nghỉ hè", "cá ngừ", "ngô nghê", "đề nghị",
+      "nhà ga", "ngõ nhỏ", "giá đỡ", "nhổ cỏ", "bố mẹ", "nhà lá", "nghé ọ", "ghế đá",
+      "bó rạ", "lọ sứ", "nở rộ", "sơ mi", "sĩ số", "gà ri", "ca sĩ", "rễ đa",
+      "tổ cò", "cá trê", "củ từ", "nhà trẻ", "tre ngà", "tủ gỗ", "trí nhớ", "trà đá",
+      "thơ ca", "bia đá", "thả cá", "tía tô", "đỏ tía", "sở thú", "lá mía", "thợ nề",
+      "dưa bở", "mùa thu", "cua cá", "cửa sổ", "chú rùa", "nô đùa", "lửa đỏ", "sữa chua",
+      "rùa bò", "thú dữ", "đũa cả", "thi đua", "xưa kia", "tò mò", "gió mùa", "trú mưa",
+      "cà phê", "tổ quạ", "đi phà", "chả quế", "cá quả", "phá cỗ", "khu phố", "quà quê",
+      "ngũ quả", "võ sĩ", "xe chỉ", "xe lu", "va li", "thợ xẻ", "vở vẽ", "lò xo",
+      "vỏ sò", "y sĩ", "ngụ ý", "y tế", "chú ý", "như ý", "quý giá", "ý tứ",
+      "sổ y bạ", "phở bò", "quà quý", "chia sẻ", "vé xe", "vỗ về", "xà cừ", "ý chí",
+      "cua đá"
+    ],
+    "sentences": [
+      "Bé Chi có mũ nỉ đỏ.",
+      "Dì đi đò, bố mẹ đi ca nô.",
+      "Dì Na ủ giá đỗ.",
+      "Mẹ gỡ cá cho bé.",
+      "Bé bê ghế cho mẹ.",
+      "Bà cho bé nho khô.",
+      "Nhà bà ở ngõ nhỏ.",
+      "Nghỉ lễ nhà Nga đi hồ Ba Bể.",
+      "Nhà Hà ở chợ Mơ.",
+      "Bố chở bà đi nhà ga.",
+      "Ngõ nhà bà nho nhỏ.",
+      "Cô Na cho bé quả sơ-ri đỏ.",
+      "Bà cho nhà bé sò, gà ri, su su.",
+      "Chị Nga tô lá cờ đỏ.",
+      "Ngõ nhỏ nhà bé có tre ngà.",
+      "Chú Tư là thợ mỏ.",
+      "Chị Nga có thìa, Hà có đĩa nhỏ.",
+      "Mẹ ru bé ngủ trưa.",
+      "Gió lùa qua khe cửa sổ.",
+      "Lá khế khẽ đu đưa.",
+      "Bố đưa cả nhà đi hồ Ba Bể.",
+      "Mẹ che ô cho em bé đỡ mưa.",
+      "Mẹ pha cà phê cho bố.",
+      "Hà mê chả quế, cá quả kho.",
+      "Bố cổ vũ bé đi thi vẽ.",
+      "Chú Tư chỉ cho bé vẽ chó xù.",
+      "Dì Na mua cho Hà va li nho nhỏ.",
+      "Thu về, dã quỳ nở rộ.",
+      "Bé chú ý nghe bà kể.",
+      "Mẹ Hà là y tá ở xã.",
+      "Mẹ ru khe khẽ cho bé ngủ.",
+      "Đi qua ngõ nhỏ là về nhà bà.",
+      "Từ quê ra, bà có quà cho cả nhà."
+    ],
+    "paras": [
+      { "kind": "văn", "lines": [
+        "Bố cho Hà ra hồ thả cá.",
+        "Hà thỏ thẻ: “Hồ to bố nhỉ?",
+        "Bố cho bé ra thả cá rô nhé!”"
+      ] },
+      { "kind": "văn", "lines": [
+        "Bà đưa bé đi chợ.",
+        "Ở chợ có đủ thứ: cua, cá, giò, chả…",
+        "Bà mua cá để kho dưa chua."
+      ] },
+      { "kind": "văn", "lines": [
+        "Nhà bà có chú chó to.",
+        "Chó ngủ ở hè để giữ nhà.",
+        "Hễ có gì lạ, chú sủa rõ to."
+      ] },
+      { "kind": "văn", "lines": [
+        "Bố mẹ cho Hà ra phố.",
+        "Ở phố có sở thú, nhà ga, ô tô.",
+        "Bố cho bé ghé Bờ Hồ mua tò he.",
+        "Hễ có gì lạ bé Hà chỉ trỏ: “A, lạ ghê bố nhỉ!”."
+      ] },
+      { "kind": "văn", "lines": [
+        "Mẹ chở chị Nga ra thị xã.",
+        "Ở nhà có bà và bé Hà.",
+        "Khi Hà nhớ mẹ, bà bế bé ra ngõ chờ mẹ về."
+      ] },
+      { "kind": "văn", "lines": [
+        "Bé bị ho.",
+        "Bố bế bé ra nhà y tế xã.",
+        "Cô y tá ghi sổ y bạ đưa cho bố."
+      ] },
+      { "kind": "văn", "lines": [
+        "Mẹ cho bé đi xe ô tô về quê bà.",
+        "Quê bà ở Phú Thọ, có chè và cọ.",
+        "Lá cọ to như ô che.",
+        "Quả cọ bà để kho cá."
+      ] }
+    ]
+  },
+  "31-45": {
+    "words": [
+      "bản đồ", "khăn rằn", "sân nhà", "bàn ghế", "nhà sàn", "múa lân", "thợ săn", "ân cần",
+      "con cò", "cơn mưa", "số bốn", "nhớ ơn", "con chồn", "ngọn tre", "thôn bản", "đơn ca",
+      "dế mèn", "khăn len", "đèn pin", "con nhện", "số chín", "bến đò", "mưa phùn", "nền nhà",
+      "chè lam", "mầm non", "số năm", "quả cam", "đầm sen", "con tằm", "cá trắm", "củ sâm",
+      "đĩa bún", "lúa non", "gắn bó", "chăm chỉ", "đầm ấm", "con tôm", "khóm tre", "bơm xe",
+      "ấm nhôm", "nhóm bạn", "thợ gốm", "rơm rạ", "chả cốm", "chả nem", "đêm rằm", "con chim",
+      "tôm hùm", "gỗ lim", "chùm nho", "tấm rèm", "thềm nhà", "quả vải", "cỏ may", "mái nhà",
+      "thợ xây", "máy sấy", "nhảy dây", "máy bay", "trại hè", "sợi chỉ", "đĩa xôi", "gói quà",
+      "chim ngói", "thổi còi", "đồ chơi", "quả ổi", "bơi lội", "chòm lá", "chổi rơm", "cốm mới",
+      "đám mây", "tem thư", "nhà máy", "con nhím", "túi vải", "gửi quà", "cùi dừa", "khe núi",
+      "múi khế", "thưa gửi", "ngửi mùi", "bó củi", "ngôi sao", "chim sáo", "véo von", "kẹo kéo",
+      "bé tẹo", "áo phao", "con mèo", "bao gạo", "cỏ lau", "cây nêu", "ga tàu", "con sếu",
+      "thêu thùa", "bầu trời", "sáu sậu", "trầu cau", "êm dịu", "nghỉ hưu", "bưu tá", "líu lo",
+      "nhỏ xíu", "quả lựu", "trĩu quả", "ngải cứu", "bé xíu", "gửi thư", "kéo co", "leo trèo",
+      "lau sậy", "chào mào", "cần câu", "sân khấu"
+    ],
+    "sentences": [
+      "Chị Nga mê văn nghệ.",
+      "Bản nhỏ có nhà sàn gỗ.",
+      "Bé bị ngã, bà ân cần dỗ bé.",
+      "Con cò ở ngọn tre.",
+      "Nhà bà ở thôn bản nhỏ.",
+      "Bé lon ton ra ngõ đón mẹ.",
+      "Mẹ mê món bún cá.",
+      "Thôn bản đã lên đèn.",
+      "Bà bịn rịn chia xa cả nhà để về quê.",
+      "Con tằm nhả tơ.",
+      "Nấm rơm nhỏ mà bụ bẫm.",
+      "Chị Nga mê món chè lam bà làm.",
+      "Lá cờ đỏ thắm bên nhà sàn.",
+      "Bàn ghế nhà bé làm từ tre ngà.",
+      "Chú cún con mon men đến bên bé.",
+      "Con gà nằm ở ổ rơm.",
+      "Ngõ nhỏ có khóm tre ngà.",
+      "Dì Lê cho bé giỏ chôm chôm.",
+      "Mẹ rán chả nem thơm quá.",
+      "Bà cho bé chum nho chín đỏ.",
+      "Chú cún nằm chễm chệ trên ghế đệm.",
+      "Năm nay, chị Nga đi dự trại hè.",
+      "Chị và bé nhảy dây ở sân nhà.",
+      "Cu Bin ngủ dậy, hai má đỏ hây hây.",
+      "Con voi có cái vòi dài.",
+      "Chú bộ đội về thăm nhà.",
+      "Trời tối sầm, gió vù vù, mưa xối xả.",
+      "Mẹ mua cho bé bộ đồ chơi nhựa.",
+      "Đám mây trôi nhè nhẹ trên trời.",
+      "Trên vòm lá me, có tổ chim be bé.",
+      "Mấy bạn túm ba tụm bảy chơi nhảy dây.",
+      "Mẹ cặm cụi đan túi cho bé.",
+      "Cây tầm gửi ở trên thân cây ổi.",
+      "Dãy phi lao reo rì rào.",
+      "Chú bộ đội có mũ tai bèo.",
+      "Sớm mai con tàu ra khơi.",
+      "Sáu sậu đậu trên ngọn tre.",
+      "Mẹ thêu đôi chim nhỏ trên khăn tay",
+      "Chú thỏ mưu trí cứu bạn.",
+      "Chim chào mào líu lo trên cây ổi.",
+      "Chào mào có áo màu nâu.",
+      "Chú bưu tá đưa bưu phẩm đến tận nhà.",
+      "Trên sân, hai đội chơi kéo co vui quá là vui."
+    ],
+    "paras": [
+      { "kind": "văn", "lines": [
+        "Bố cho bé đi sở thú.",
+        "Sở thú có vô vàn thú quý như: hổ, sư tử, cò, khỉ…",
+        "Bố chỉ cho bé thú quý: hà mã, kì đà…",
+        "Bố dặn bé chớ gần thú dữ như: hổ, trăn và sư tử."
+      ] },
+      { "kind": "văn", "lines": [
+        "Nghỉ lễ mẹ đưa Hà và chị Nga về bà.",
+        "Nhà bà ở thôn bản nhỏ, xa thị trấn.",
+        "Bà cho bé đủ thứ quà quê: giò, chả, quế,…",
+        "bà còn cho chị Nga cả nón đan từ lá cọ."
+      ] },
+      { "kind": "văn", "lines": [
+        "Bố đi xa về.",
+        "Hà lon ton ra ngõ đón bố.",
+        "Bố bế Hà và hôn lên má bé.",
+        "Bố kể: “Ở xa, bố nhớ Hà, nhớ mẹ và nhớ cả chú cún con”.",
+        "Bố mua quà cho cả nhà.",
+        "Bố mua cho mẹ ô nhỏ, mua cho Hà khăn len và mũ len đỏ."
+      ] },
+      { "kind": "văn", "lines": [
+        "Hè, cả nhà về quê.",
+        "Qua ngã tư là ngõ nhỏ nhà bà.",
+        "Bà đã làm sẵn món cá trắm kho và món chè lam để chờ cả nhà về ăn.",
+        "Từ xa, Hà nhìn căn nhà đơn sơ mà đầm ấm.",
+        "Bố nhìn Hà thì thầm: “Mẹ con đã lớn lên từ căn nhà đó”."
+      ] },
+      { "kind": "văn", "lines": [
+        "Nghỉ lễ, mẹ cho Hà về quê thăm bà và bé Bin.",
+        "Hà vừa về đến ngõ, bà và bé Bin đã ra đón.",
+        "Bé Bin nhìn Hà, lon ton đến bên chị.",
+        "Hà bế Bin và hôn lên má bé."
+      ] },
+      { "kind": "văn", "lines": [
+        "Nghỉ hè, mẹ cho Hà và chị Nga về quê.",
+        "Bà đưa Hà và chị nga đi chợ.",
+        "Chợ quê có cá, tôm, gà và cả ngan nữa.",
+        "Bà mua cá về làm món cá om dưa cho cả nhà."
+      ] },
+      { "kind": "văn", "lines": [
+        "Chị Nga bị ốm, dì Na đến thăm.",
+        "Dì mua cho chị chùm nho tím, quả cam tròn mũm mĩm, quả dưa lê thơm thơm và cả vỉ sữa chua nữa.",
+        "Dì đến bên, ân cần sờ trán chị Nga.",
+        "Nhìn dì, chị Nga tủm tỉm, thầm cảm ơn dì."
+      ] },
+      { "kind": "văn", "lines": [
+        "Hôm nay, Hà và mẹ đến nhà trẻ đón cu Bin.",
+        "Hà cầm thêm chùm vải cho em.",
+        "Thấy chị và mẹ đến, Bin chạy ngay ra ôm chầm lấy mẹ.",
+        "Mẹ bế em lên.",
+        "Hà đưa cho em mấy quả vải chín đỏ.",
+        "Bin cầm chùm vải trên tay cứ tủm tỉm mãi."
+      ] },
+      { "kind": "thơ", "lines": [
+        "Gió từ tay mẹ",
+        "Ru bé ngủ say",
+        "Thay cho gió trời",
+        "Giữa trưa oi ả."
+      ] },
+      { "kind": "văn", "lines": [
+        "Đêm qua, bé thấy bạn Hải lái máy bay đến đón đi chơi.",
+        "Nhìn từ trên máy bay, bé thấy mây bay nhè nhẹ, thấy nhà cửa, cây cối um tùm.",
+        "Khi bé vừa ngủ dậy, mẹ hỏi: “Đêm qua, bé cứ lẩm bẩm gì thế?”.",
+        "Bé tủm tỉm và nghĩ: “À, thì ra là bé mơ!”."
+      ] },
+      { "kind": "văn", "lines": [
+        "Chị Nga đã đi Hội An gần năm rồi.",
+        "Nhớ chị, Hà gửi thư tâm sự với chị.",
+        "Hà kể cho chị nghe về cây lan đã ra lá mới; cây me um tùm ở ngõ giờ đã sai quả.",
+        "Giá mà có chị ở nhà để chơi trốn tìm với Hà như ngày xưa nhỉ?",
+        "Hà nghĩ, chị Nga nhận thư sẽ vui lắm."
+      ] },
+      { "kind": "văn", "lines": [
+        "Chú mèo nhà Hà là mèo tam thể.",
+        "Hà gọi nó là bé Bự vì nó mũm mĩm lắm.",
+        "Bự hay leo trèo trên thân cây ổi.",
+        "Nó còn trốn ở gầm bàn để Hà đi tìm.",
+        "Hà chăm Bự lắm.",
+        "Hà hay gọi Bự ra sân chơi, cho nó ăn cơm với cá.",
+        "Hễ Hà đi chỗ nào là Bự theo chỗ đấy."
+      ] },
+      { "kind": "thơ", "lines": [
+        "Chú mèo tam thể",
+        "Leo lên cây cau",
+        "Thấy dây trầu leo",
+        "Mèo ta khều khào"
+      ] },
+      { "kind": "thơ", "lines": [
+        "Gió thổi lao xao",
+        "Lá cây rì rào",
+        "Làm mèo ta sợ",
+        "Chạy ngay vào nhà."
+      ] },
+      { "kind": "văn", "lines": [
+        "Cây lựu nhà cô Tâm sai trĩu quả.",
+        "Quả lựu to, tròn, màu đo đỏ như cái đèn.",
+        "Khi Hà lên thủ đô, cô gửi cho bố mẹ Hà giỏ lựu đầy.",
+        "Cầm giỏ lựu trên tay, Hà nói cảm ơn cô Tâm."
+      ] },
+      { "kind": "văn", "lines": [
+        "Ngày lễ, mẹ cho Hà lên phố đi bộ.",
+        "Ở phố có đầy trò chơi vui lắm.",
+        "Chỗ này, mấy bạn nhỏ chơi kéo co, chỗ kia hai chị lớn chơi nhảy dây.",
+        "Phía xa xa, mấy bạn trai chơi trò lái ô tô.",
+        "Bên vỉa hè, có chú cầm cọ vẽ mấy bạn nhỏ.",
+        "Hà chạy đến xem và nhờ chú vẽ cho cả hai mẹ con."
+      ] }
+    ]
+  },
+  "46-60": {
+    "words": [
+      "nhạc sĩ", "tắc kè", "âm nhạc", "xôi gấc", "con hạc", "màu sắc", "gió bấc", "con vạc",
+      "quả cóc", "gốc cây", "cây trúc", "lọ mực", "khúc gỗ", "con ốc", "học bài", "lực sĩ",
+      "gió mát", "chủ nhật", "hạt cát", "thật thà", "cửa sắt", "bát đũa", "đôi mắt", "bài hát",
+      "rau ngót", "lá lốt", "cái vợt", "quả nhót", "quả ớt", "nắn nót", "sữa bột", "giọt mưa",
+      "quả gấc", "cao tốc", "cúc áo", "thơm mát", "đốt lửa", "bắt tay", "vất vả", "ngọt lịm",
+      "đất sét", "con vịt", "ngày tết", "con vẹt", "quay tít", "dệt vải", "nét chữ", "ríu rít",
+      "ông bụt", "gạo lứt", "bút chì", "mứt dừa", "nút chai", "day dứt", "kim phút", "kẹo mút",
+      "xe đạp", "bắp ngô", "bài tập", "cáp treo", "thắp đèn", "múa sạp", "tấp nập", "ngăn nắp",
+      "chóp núi", "lốp xe", "lớp học", "hộp giấy", "tia chớp", "góp sức", "tốp ca", "cá bớp",
+      "múi mít", "quét nhà", "hộp bút", "bắp cải", "tập vẽ", "họp chợ", "nứt nẻ", "con tép",
+      "búp bê", "bắt nhịp", "xôi nếp", "giày dép", "bếp ga", "vải đẹp", "túp lều", "màu xanh",
+      "con kênh", "máy tính", "bức tranh", "lênh khênh", "thành phố", "cá kình", "mái đình", "con ếch",
+      "cá trích", "túi xách", "tờ lịch", "vách núi", "cái phích", "kênh rạch", "bạc phếch", "làng quê",
+      "vâng lời", "bậc thang", "búp măng", "nâng niu", "cửa hàng", "lẵng hoa", "trang vở", "gác xép",
+      "sắp xếp", "nhịp nhàng", "màu vàng", "minh mẫn", "sở thích", "chênh chếch", "thênh thang"
+    ],
+    "sentences": [
+      "Chú mèo ngủ ở bậc thềm.",
+      "Hà ghi nhớ lời nhắc của bố mẹ.",
+      "Ở Tam Đảo có Cầu Mây và Thác Bạc",
+      "Chú sóc leo lên cây dẻ.",
+      "Con dốc ở bản vừa dài lại vừa cao.",
+      "Mùa thu, cúc nở rực rỡ cả góc phố.",
+      "Trời mùa thu gió mát.",
+      "Bé tự giặt khăn mặt.",
+      "Mẹ kho cá với mật mía.",
+      "Sau bữa cơm, bé rót trà mời bố mẹ.",
+      "Thức ăn của thỏ là cà rốt.",
+      "Trời đã ngớt mưa, các bạn nhỏ ùa ra sân chơi.",
+      "Ở bản, nhà cửa thưa thớt.",
+      "Lời ru của mẹ thật ngọt ngào.",
+      "Nhà nhà đều tất bật để đón Tết.",
+      "Quả mít chín rất ngon.",
+      "Bố mẹ đưa bé đi chơi tết.",
+      "Nhà bạn Hải có chú vẹt hay nói.",
+      "Cô cho bé bút chì màu.",
+      "Mẹ làm món mứt dừa non.",
+      "Bố dạy bé tập đi xe đạp.",
+      "Mẹ mua cho em tập vở mới.",
+      "Bắp ngô có các hạt đều tăm tắp.",
+      "Bản em trên chóp núi.",
+      "Lớp học hôm nay vui quá.",
+      "Đàn cá cờ ngoi lên đớp mưa.",
+      "Mẹ bổ mít cho cả nhà ăn.",
+      "Bé hồi hộp đợi quà của bố.",
+      "Bàn học của em rất ngăn nắp.",
+      "Mẹ thổi xôi nếp.",
+      "Bé xin phép mẹ đến nhà bạn chơi.",
+      "Nhân dịp năm mới, cả nhà về quê ăn tết.",
+      "Mái đình Trà Cổ rất cổ kính.",
+      "Bức tranh này vẽ cảnh Cửa Lò.",
+      "Ở khu vui chơi, các bé chơi bập bênh.",
+      "Ếch kêu ồm ộp.",
+      "Em giữ gìn sách vở sạch sẽ.",
+      "Chú chim chích bé nhỏ, xinh xinh.",
+      "Tháng ba, cây bàng thay áo mới",
+      "Trăng rằm soi sáng khắp thôn làng.",
+      "Bé nâng niu lật trang sách mới.",
+      "Mẹ làm bánh nếp rất ngon.",
+      "Bà nội bé vẫn còn minh mẫn lắm.",
+      "Đêm về, nhìn ánh trăng vàng thật đẹp."
+    ],
+    "paras": [
+      { "kind": "văn", "lines": [
+        "Sau cơn mưa đầu mùa, gió bấc tràn về.",
+        "Sớm ra, trời giá hơn hẳn.",
+        "Mẹ dậy sớm, nấu xôi lạc cho cả nhà.",
+        "Sau bữa ăn, mẹ lấy thêm áo ấm cho Hà và chị Nga.",
+        "Hai chị em mặc áo ấm, rồi vui vẻ chạy ra sân nô đùa."
+      ] },
+      { "kind": "văn", "lines": [
+        "Cứ mỗi độ thu về, mẹ lại mua cúc về cắm.",
+        "Nhìn lọ cúc nở rực rỡ trên bàn, mẹ vui lắm.",
+        "Mùa thu còn có cốm mới.",
+        "Mẹ bày đĩa cốm lên bàn tay của bố.",
+        "Bố bảo: “Cốm mới thơm lắm!”.",
+        "Nghe bố khen cốm mới, bé thử ngay rồi tấm tắc khen."
+      ] },
+      { "kind": "văn", "lines": [
+        "Sân nhà bà ở quê có giàn bí.",
+        "Từ mặt đất, bí bò ra, phủ tràn từ giàn ra cả lan can sắt.",
+        "Lá bí to, mặt lá như phủ phấn.",
+        "Nụ bí nho nhỏ.",
+        "Quả bí khi to thì vỏ nhạt dần.",
+        "Hai bà cháu chăm sóc giàn bí rất cẩn thận."
+      ] },
+      { "kind": "văn", "lines": [
+        "Ngày nghỉ, mẹ làm bao món ngon cho cả nhà.",
+        "Hà mê hai món tôm sú tẩm bột rán và chả lá lốt.",
+        "Nhìn đĩa tôm vừa rán giòn trên đĩa, Hà ăn thử ngay.",
+        "Chao ôi, vị ngọt đậm đà của tôm, vị giòn của bột rán làm bé cứ mê mãi.",
+        "Bé thủ thỉ với mẹ: “Hôm sau mẹ lại làm món này nhé!”."
+      ] },
+      { "kind": "văn", "lines": [
+        "Chị Nga vừa đi hội trại về, vẻ mặt chị hớn hở lắm.",
+        "Hà hỏi: “Chị có gì mà vui thế?”.",
+        "Chị Nga ôm Hà kể: ”Ở hội trại có các trò chơi vui lắm.",
+        "Nào là ô ăn quan, nào là kéo co và chơi nhảy dây nữa.",
+        "Tối đến thầy cô và các bạn lại đốt lửa trại, ca hát, nhảy múa…”.",
+        "Nghe chị kể, Hà thấy vui theo."
+      ] },
+      { "kind": "thơ", "lines": [
+        "Cái con chìa vôi",
+        "Đậu trên cây mít",
+        "Nó kêu ríu rít",
+        "Mít đã chín rồi."
+      ] },
+      { "kind": "văn", "lines": [
+        "Ngày gần tết mẹ làm món mứt dừa và ô mai để bán.",
+        "Mứt dừa mẹ làm có đủ vị: cà phê, dâu, ca cao…",
+        "Còn ô mai thì có: sấu chua giòn, mận xào cay và ô mai mơ vị thơm thơm.",
+        "Hà thử món nào món đấy đều rất ngon."
+      ] },
+      { "kind": "văn", "lines": [
+        "Mẹ mua cho Hà tập vở mới và bút chì để bé tô chữ.",
+        "Ngày ngày, bé chăm chỉ tập tô.",
+        "Hà cẩn thận, nắn nót các chữ cái và chữ số.",
+        "Nét chữ của bé đều tăm tắp.",
+        "Sau khi tô chữ, bé còn lấy bút sáp màu ra vẽ.",
+        "Hà vẽ bố, vẽ mẹ và vẽ cả ngôi nhà ấm áp của bé."
+      ] },
+      { "kind": "văn", "lines": [
+        "Cô sẻ nâu cử sơn ca đi thi văn nghệ.",
+        "Khi đi thi, sơn ca hồi hộp lắm.",
+        "Về nhà, sơn ca hỏi mẹ nên hát bài gì cho ý nghĩa.",
+        "Nhờ mẹ góp ý, sơn ca sẽ hát bài hát ca ngợi thầy cô và lớp mầm non của cô sẻ nâu."
+      ] },
+      { "kind": "thơ", "lines": [
+        "Cháu đi mẫu giáo",
+        "Giờ đã lên ba",
+        "Lời cô dạy cháu",
+        "Cháu nhắc cả nhà",
+        "Nhắc mẹ, nhắc cha",
+        "Khi ăn chớ nói",
+        "Đưa tăm chớ vội",
+        "Phải cầm hai tay"
+      ] },
+      { "kind": "thơ", "lines": [
+        "Cá mè ăn nổi",
+        "Cá chép ăn chìm",
+        "Con tép lim dim",
+        "Bên chùm rễ cỏ",
+        "Con cua áo đỏ",
+        "Cắt cỏ trên bờ",
+        "Con cá múa cờ",
+        "Đẹp ơi là đẹp"
+      ] },
+      { "kind": "văn", "lines": [
+        "Quê nội Hải ở Bến Tre.",
+        "Nơi ấy có dãy dừa xanh cao vút, nằm dọc bên cạnh kênh dài.",
+        "Lá dừa vừa to vừa dài cứ lao xao khi gió thổi về.",
+        "Các trái dừa trên cây tròn tròn y như một đàn lợn con nằm ngủ.",
+        "Bắc qua con kênh là cây cầu khỉ làm từ tre.",
+        "Mỗi lần về quê, đi qua cầu khỉ, Hải vừa thấy hồi hộp vừa thấy thú vị."
+      ] },
+      { "kind": "văn", "lines": [
+        "Ếch xanh và dế nâu là bạn của nhau.",
+        "Ếch xanh ở hồ sen, dế nâu ở bãi cỏ gần hồ.",
+        "Nhà ếch xanh có hồ sen thơm mát, còn nhà dế thì có bãi cỏ xanh non.",
+        "Ếch xanh và dế nâu hay ngồi trên một lá sen to để đi chu du khắp hồ.",
+        "Hai bạn như hai du khách thích khám phá cảnh ở trên hồ."
+      ] },
+      { "kind": "văn", "lines": [
+        "Tháng Ba, bố Hà bắt đầu gieo hạt gấc.",
+        "Đến tháng Tư, bố làm giàn cho gấc bò lên.",
+        "Sang tháng sau, lá gấc xanh phủ kín cả giàn.",
+        "Trái gấc theo đó mà to dần lên.",
+        "Ban đầu quả gấc be bé màu xanh.",
+        "Khi chín, quả gấc màu đỏ sẫm, gai chi chít.",
+        "Tháng Tám, bố thu lứa đầu để làm xôi gấc và dầu gấc."
+      ] },
+      { "kind": "văn", "lines": [
+        "Trăng đêm thu thật sáng.",
+        "Trăng tròn vành vạch làm sáng cả một góc sân nhà Minh.",
+        "Nhờ ánh trăng, Minh thấy mọi vật như rõ mồn một.",
+        "Đó là bụi tre rì rào khi gió hè thổi, là cái ghế đẩu bà hay ngồi để quạt cho Minh.",
+        "Ngắm trăng, Minh lại nhớ bà, nhớ một thuở ấu thơ bên bà."
+      ] }
+    ]
+  },
+  "61-70": {
+    "words": [
+      "con ong", "lung linh", "trứng gà", "áo bông", "quả sung", "dòng sông", "quả bóng", "khu rừng",
+      "cá diếc", "kiến lửa", "thiệp mời", "công việc", "rau riếp", "rạp xiếc", "bưu điện", "nhiếp ảnh",
+      "lặng yên", "hồng xiêm", "cồng chiêng", "kim tiêm", "que diêm", "siêng năng", "chim yến", "củ riềng",
+      "thời tiết", "yêu quý", "vải thiều", "biết ơn", "Việt Nam", "chiều tối", "đáng yêu", "cánh diều",
+      "cầu vồng", "trong xanh", "vui mừng", "kính yêu", "củ gừng", "bữa tiệc", "nhiệt tình", "chú cuội",
+      "nhuộm vải", "đuôi cá", "cánh buồm", "tuổi thơ", "ao chuôm", "con muỗi", "luộm thuộm", "vỉ thuốc",
+      "tuốt lúa", "cuộc thi", "lạnh buốt", "bó đuốc", "trong suốt", "cày cuốc", "trắng muốt", "chuồn chuồn",
+      "mưa tuôn", "rau muống", "chuông gió", "cà cuống", "buồn vui", "cội nguồn", "đồng ruộng", "quả bưởi",
+      "con hươu", "nụ cười", "nướu răng", "bầu rượu", "tươi tốt", "lò sưởi", "chú khướu", "buổi chiều",
+      "hươu sao", "tươi cười", "luống rau", "cuồn cuộn", "bạch tuộc"
+    ],
+    "sentences": [
+      "Chú thỏ nhảy tung tăng trên thảm cỏ",
+      "Mưa tạnh, nắng bừng lên một góc trời.",
+      "Sau cơn mưa, cầu vồng bừng lên đủ bảy sắc màu.",
+      "Bố mẹ cho bé đi xem xiếc.",
+      "Mẹ nấu miếng ngan rất ngon.",
+      "Rau diếp cá có vị chua chua, thanh mát.",
+      "Hồng xiêm chín ngọt lịm",
+      "Bản nhỏ yên vui, thanh bình.",
+      "Tiếng cồng chiêng rộn rã khắp bản làng.",
+      "Thời tiết mùa thu thật mát mẻ.",
+      "Chiều hè, mẹ nấu canh riêu cua.",
+      "Thầy cô dạy bé biết kính yêu ông bà, cha mẹ.",
+      "Cả lớp yên lặng nghe cô giảng bài",
+      "Quê Hà nằm trên dòng sông xanh biếc.",
+      "Bạn Hải rất nhiệt tình chỉ bảo bài cho các bạn.",
+      "Những cánh buồm trắng hối hả chở cá về bờ.",
+      "Buổi học cuối năm, cô trao quà cho các bạn.",
+      "Chú thỏ con có bộ lông trắng muốt.",
+      "Chim non dậy sớm để học thuộc bài.",
+      "Chiếc chuông gió kêu leng keng.",
+      "Chú chuồn chuồn ớt mới đẹp lắm.",
+      "Cu Bin có nụ cười rất đáng yêu.",
+      "Chú khướu có giọng hót rất hay.",
+      "Làn gió biển thổi vào mát dượi.",
+      "Chuồn chuồn đậu ở cành cây.",
+      "Mưa xuống, tiết trời càng lạnh buốt."
+    ],
+    "paras": [
+      { "kind": "thơ", "lines": [
+        "Nhảy tanh tách",
+        "Là con tép sống",
+        "Tép trong quả bòng",
+        "Xếp hàng đi ngủ.",
+        "Mẹ bòng ấp ủ",
+        "Một đàn tép thơm",
+        "Đội đêm trăng tròn",
+        "Ùa ra phá cỗ."
+      ] },
+      { "kind": "thơ", "lines": [
+        "Bé chọn màu xanh",
+        "Vẽ đồng lúa biếc",
+        "Bé chọn màu xanh",
+        "Vẽ rừng trùng điệp.",
+        "Bé chọn màu đỏ",
+        "Vẽ màu mái ngói",
+        "Bé chọn màu đỏ",
+        "Vẽ ông mặt trời."
+      ] },
+      { "kind": "văn", "lines": [
+        "Cây hồng xiêm ở nhà nội sai trĩu quả.",
+        "Những quả hồng xiêm màu nâu thơm lừng cả một góc.",
+        "Ngày ngày, gà mẹ siêng năng đưa đàn con đến kiếm ăn ở đó.",
+        "Có mẹ ở bên, chúng yên tâm chạy nhảy.",
+        "Chốc chốc, có chú chạy lại, nấp vào cánh mẹ để nũng nịu.",
+        "Lúc ấy, gà mẹ lại ôm gà con vào đôi cánh cứng cáp của mình."
+      ] },
+      { "kind": "thơ", "lines": [
+        "Bé đi trong hàng cây",
+        "Chỉ thấy vòng lá biếc",
+        "Nhạc công vẫn mê say",
+        "Điệu bổng trầm tha thiết."
+      ] },
+      { "kind": "thơ", "lines": [
+        "Ve ve ve ve ve….",
+        "Kéo dài ra mải miết",
+        "Lạ nhỉ, khúc nhạc hè",
+        "Ve học đâu không biết?"
+      ] },
+      { "kind": "văn", "lines": [
+        "Mùa đông đi qua, thỏ xám hội ngộ với ong vàng tại khu rừng nhỏ.",
+        "Hai bạn mừng rỡ nắm tay, hỏi han nhau.",
+        "Trên bãi cỏ non xanh, đôi bạn cùng nhau nhảy múa và ca hát.",
+        "Tiếng hát của hai bạn vang xa làm cho mọi vật đều nghe thấy.",
+        "Tất cả cùng đến chung vui và hát lên bài ca tạm biệt mùa đông."
+      ] },
+      { "kind": "thơ", "lines": [
+        "Muồm muỗm bay cao",
+        "Cào cào bay thấp",
+        "Chúng em đuổi bắt",
+        "Trên đồng cỏ xanh."
+      ] },
+      { "kind": "văn", "lines": [
+        "Mùa đông, tiết trời lạnh buốt.",
+        "Suốt mấy ngày liền, trời mưa gió, rét buốt.",
+        "Những cành cây khẳng khiu, gầy guộc, bên hè phố đã trơ trụi hết lá.",
+        "Đất khô trắng, những cơn gió vi vu thổi lăn những lá khô xào xạc."
+      ] },
+      { "kind": "văn", "lines": [
+        "Chú chuồn chuồn bay về đậu ở cành khế đầu nhà.",
+        "Hà muốn bắt nó về chơi.",
+        "Bé nhẹ nhàng lại gần cành cây.",
+        "Thấy Hà, chú chuồn chuồn sợ cuống lên, bay đi bay lại, từ cành này sang cành kia.",
+        "Cái đầu chú lúc lắc, hai mắt mở to, đảo láo liên"
+      ] },
+      { "kind": "thơ", "lines": [
+        "Sáng nào em đến lớp",
+        "Cũng thấy cô đến rồi",
+        "Đáp lời: Chào cô ạ!",
+        "Cô mỉm cười thật tươi."
+      ] },
+      { "kind": "văn", "lines": [
+        "Mùa đông, hươu cao cổ bị viêm họng.",
+        "Các cô cậu bé kéo nhau đến thăm hươu.",
+        "Ai cũng biết đau họng thì phải quàng khăn ấm.",
+        "Với cái cổ dài thế kia, hươu cần phải có rất nhiều khăn.",
+        "Vậy là các cậu bé, cô bé tháo ngay khăn của mình quàng vào cổ cho chú.",
+        "Trên chiếc cổ dài của hươu bao nhiêu là khăn: Khăn len, khăn dạ, ….",
+        "Hươu cao cổ cảm động lắm và thấy mùa đông không còn lạnh nữa."
+      ] }
+    ]
+  },
+  "71-80": {
+    "words": [
+      "cầu trượt", "thược dược", "cái lược", "óng mượt", "giấy ướt", "bước đi", "ước mơ", "thướt tha",
+      "quả mướp", "ướm thử", "hạt cườm", "ướp đá", "thanh gươm", "cướp cờ", "túi chườm", "nườm nượp",
+      "cái loa", "tròn xoe", "toa tàu", "điều hoà", "sức khoẻ", "pháo hoa", "váy xoè", "hoa hoè",
+      "rước đèn", "lướt ván", "nụ hoa", "con mương", "khoé mắt", "cháo lươn", "xanh tươi", "vở toán",
+      "nhọn hoắt", "hoạt bát", "xoắn thừng", "thoăn thoắt", "đoàn tàu", "khoẻ khoắn", "ngoan ngoãn", "khoai tay",
+      "xum xuê", "bà ngoại", "chỉ huy", "vạn tuế", "suy nghĩ", "hoa huệ", "quả xoài", "mùa xuân",
+      "kỉ luật", "tuân thủ", "nghệ thuật", "khuân vác", "sầm uất", "hoà thuận", "huân chương", "quyển vở",
+      "sò huyết", "kể chuyện", "truyền thuyết", "chuyên cần", "quyết tâm", "chim khuyên", "duyệt binh", "thuỷ thủ",
+      "quê quán", "thuyết phục", "sao khuê", "tuần tra", "tàu thuỷ", "tập luyện", "tuyệt vời"
+    ],
+    "sentences": [
+      "Đàn gà con có bộ lông vàng óng mượt.",
+      "Thược dược có nhiều màu sắc rực rỡ.",
+      "Giàn mướp che mát cả hiên nhà.",
+      "Bươm bướm bay dập dờn quanh những luống cải vàng.",
+      "Chú ong chăm chỉ tìm hoa lấy mật.",
+      "Vườn hoa đua nhau khoe sắc, toả hương thơm.",
+      "Mẹ xâu hạt cườm thành chiếc vòng xinh xắn.",
+      "Thược dược khoe sắc đỏ trong nắng mai.",
+      "Người đi trẩy hội chùa hương đông nườm nượp.",
+      "Đoàn tàu từ từ tiến vào sân ga.",
+      "Bé được cô giáo tặng phiếu bé ngoan.",
+      "Các chị, các cô gặt lúa nhanh thoăn thoắt.",
+      "Trong vườn xum xuê trái ngọt.",
+      "Trên quảng trường Ba Đình, Lăng Bác uy nghi mà gần gũi.",
+      "Khoai tay chiên là món ăn yêu thích của các bạn nhỏ.",
+      "Sắc xuân đã tràn về khắp các miền quê.",
+      "Thành phố Hồ Chí Minh đông đúc và sầm uất.",
+      "Đỉnh núi phủ đầy tuyết trắng.",
+      "Chú chim khuyên nhỏ hót véo von trên cành.",
+      "Sinh hoạt hè là hoạt động bổ ích cho học sinh.",
+      "Để giúp cơ thể khoẻ khoắn, cần chăm chỉ tập thể dục."
+    ],
+    "paras": [
+      { "kind": "văn", "lines": [
+        "Hang dế ở quanh bãi và gần hồ ao.",
+        "Chuồn chuồn hay đậu trên ngọn cỏ cao bên bờ nước.",
+        "Bởi thế đã thành thói quen, chàng dế và chàng chuồn chuồn cứ mùa hè đến là gặp nhau ở bờ cỏ ướt, anh đậu ngọn, anh nằm đất."
+      ] },
+      { "kind": "thơ", "lines": [
+        "Ông trồng bên cạnh bờ ao",
+        "Một giàn mướp lạ… Trái nào cũng to",
+        "Lá xanh biếc, nụ vàng mơ",
+        "Để lũ ong phải ngẩn ngơ thế nào."
+      ] },
+      { "kind": "văn", "lines": [
+        "Cây bí con vươn vai một cái rồi đội đất ngoi lên.",
+        "Đầu tiên là hai lá mầm xinh xắn xoà lên khỏi mặt đất.",
+        "Ôi, thế giới mới đẹp lắm sao!",
+        "Những bông hoa rực rỡ đu đưa, khoe sắc dưới ánh nắng mặt trời.",
+        "Đàn bướm xinh dập dờn bên muôn hoa."
+      ] },
+      { "kind": "văn", "lines": [
+        "Những chú ve trên cây đã bắt đầu kêu.",
+        "Mùa hè đến rồi!",
+        "Hoa bìm bịp tím biếc, hoa hướng dương vàng rực, hoa lựu đỏ hoe.",
+        "Sau cơn mưa, cầu vồng bảy sắc bắt đầu xuất hiện phía chân trời.",
+        "Từng đám mây đỏ rực như lửa.",
+        "Ruộng lúa vàng trĩu bông nhấp nhô theo chiều gió.",
+        "Mùa hè thật vui và rực rỡ."
+      ] },
+      { "kind": "văn", "lines": [
+        "Lớp học của cô sẻ nâu trên giàn mướp, cạnh một cái ao nhỏ.",
+        "Học trò của cô nhiều lắm: ong bầu, ong mật, bướm vàng, bướm trắng…",
+        "Ai cũng xinh đẹp, ngoan ngoãn.",
+        "Ngày Tết thầy cô đã đến, các bạn rủ nhau tặng quà cho cô.",
+        "Ong mật tặng cô một túi mật thơm ngon.",
+        "Bướm vàng múa một điệu thật đẹp…",
+        "Cô sẻ nâu cảm động lắm vì thấy học trò mình đoàn kết và giỏi giang."
+      ] },
+      { "kind": "thơ", "lines": [
+        "Cứ mỗi độ thu sang",
+        "Hoa cúc lại nở vàng",
+        "Ngoài vườn hương thơm ngát",
+        "Ong bướm bay rộn ràng."
+      ] },
+      { "kind": "thơ", "lines": [
+        "Hoa cà tim tím",
+        "Hoa huệ trắng tinh",
+        "Hoa xoài xinh xinh",
+        "Đua nhau cùng nở."
+      ] },
+      { "kind": "văn", "lines": [
+        "Mùa xuân đã về.",
+        "Nắng xuân lan toả khắp vườn nhà.",
+        "Xuân về, bao loài hoa khoe sắc.",
+        "Sắc vàng của cây quất, cây mai, sắc đỏ thắm của hoa đào, sắc trắng tinh khiết của hoa mận…",
+        "Muôn hoa mang sắc xuân về cho mọi người."
+      ] },
+      { "kind": "thơ", "lines": [
+        "Gà cồ đến lớp",
+        "Mải nói chuyện riêng",
+        "Cô giáo đã nhắc",
+        "Vẫn còn huyên thuyên",
+        "Học ẩu chóng quên",
+        "Nhớ nguyên một chữ",
+        "Sáng ra vươn cổ",
+        "“Ó o …ó o…”."
+      ] },
+      { "kind": "văn", "lines": [
+        "Bé Na bừng tỉnh khi tiếng gà gáy “Ò…ó…o”.",
+        "Ông chuối tiêu đang chăm những quả chuối mật vàng.",
+        "Bà hồng xiêm quanh năm cần mẫn với chiếc áo nâu bạc phếch.",
+        "Các cô bướm chuẩn bị những chiếc áo vàng tươi như đi xem hội, chị hồng thật rực rỡ trong chiếc áo màu đỏ….",
+        "Tất cả đều chờ mùa thu tới để đón cô trăng xuống vui đêm Trung Thu."
+      ] }
+    ]
+  }
+};
+const CLUSTER = CLUSTER_DATA[localStorage.getItem('tv1_cluster')] ? localStorage.getItem('tv1_cluster') : '1-15';
+const CD = CLUSTER_DATA[CLUSTER];
+
+// Phần 1: đọc đúng từ đôi và câu như trong file (không cắt, không ghép)
+const rawPart1Database = [...new Set([...CD.words, ...CD.sentences])];
+// Phần 2: đọc đoạn
+const rawPart2Database = CD.paras;
+// Phần 3: AI đọc câu và đoạn, mỗi đoạn cắt thành các câu ngắn, gặp dấu "." là hết 1 câu (không giới hạn số chữ)
+const splitByDot = (t) => t.replace(/\s+/g, ' ').trim().split(/(?<=\.)\s+/).map(x => x.trim()).filter(Boolean);
+const rawPart3Database = [...new Set([
+    ...CD.sentences.flatMap(splitByDot),
+    ...CD.paras.flatMap(p => splitByDot(p.lines.join(' ')))
+])];
+
+        const generateQuestionsList = (baseList, targetCount) => {
+            if (!baseList.length) return [];
+            let result = [...baseList];
+            result.sort(() => Math.random() - 0.5);
+            while (result.length < targetCount) { result = result.concat(baseList); }
+            return result.slice(0, targetCount);
+        };
+
+        const initialRawData = {
+            p1Count: 10, p2Count: 5, p3Count: 10,
+            part1: generateQuestionsList(rawPart1Database, 10),
+            part2: generateQuestionsList(rawPart2Database, 10),
+            part3: generateQuestionsList(rawPart3Database, 10)
+        };
+
+        const calculateWordScore = (spoken, wordObj) => {
+            const spokenClean = cleanStr(spoken); const mainWordClean = cleanStr(wordObj.word); const spellClean = cleanStr(wordObj.spell);
+            if (!spokenClean) return 0; if (spokenClean === mainWordClean || spokenClean === spellClean) return 100;
+            const spokenWords = spokenClean.split(/\s+/).filter(Boolean); const spellWords = spellClean.split(/\s+/).filter(Boolean);
+            const lastSpokenWord = spokenWords[spokenWords.length - 1] || "";
+            const hasMainWord = spokenWords.includes(mainWordClean) || lastSpokenWord === mainWordClean;
+            if (!hasMainWord) return Math.min(60, Math.round((spokenClean.includes(mainWordClean[0]) ? 40 : 20)));
+            if (spokenWords.length === 1 && spokenWords[0] === mainWordClean) return 100;
+            let spellMatched = 0; spellWords.forEach(w => { if (spokenWords.includes(w)) spellMatched++; });
+            const spellRatio = spellWords.length > 0 ? (spellMatched / spellWords.length) : 1;
+            if (spellRatio >= 0.8) return 100; else return Math.round(85 + (spellRatio / 0.8) * 10);
+        };
+
+        const calculateSentenceScore = (spoken, targetSentence) => {
+            const spokenClean = cleanStr(spoken); const targetClean = cleanStr(targetSentence);
+            if (!spokenClean) return 0; if (spokenClean === targetClean) return 100;
+            const spokenWords = spokenClean.split(/\s+/).filter(Boolean); const targetWords = targetClean.split(/\s+/).filter(Boolean);
+            let matched = 0; let targetIdx = 0;
+            spokenWords.forEach(word => {
+                const foundIdx = targetWords.indexOf(word, targetIdx);
+                if (foundIdx !== -1) { matched++; targetIdx = foundIdx + 1; }
+            });
+            const percent = Math.round((matched / targetWords.length) * 100);
+            return Math.min(100, percent);
+        };
+
+        const speakText = async (text, rate = 0.85) => {
+            if (!text) return;
+            if (window.responsiveVoice && window.responsiveVoice.isPlaying()) window.responsiveVoice.cancel();
+            if (window.currentAudio) { window.currentAudio.pause(); window.currentAudio = null; }
+            if (window.responsiveVoice) { window.responsiveVoice.speak(text, "Vietnamese Female", { rate: rate }); return; }
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'vi-VN'; utterance.rate = rate; window.speechSynthesis.speak(utterance);
+            }
+        };
+
+        const triggerFireworks = () => {
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 150, angle: 60, spread: 80, origin: { x: 0, y: 0.8 }, zIndex: 100 });
+                confetti({ particleCount: 150, angle: 120, spread: 80, origin: { x: 1, y: 0.8 }, zIndex: 100 });
+            }
+        };
+
+        const triggerMegaFireworks = () => {
+            if (typeof confetti === 'function') {
+                const duration = 3 * 1000; const animationEnd = Date.now() + duration; const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+                const interval = setInterval(function() {
+                    const timeLeft = animationEnd - Date.now();
+                    if (timeLeft <= 0) return clearInterval(interval);
+                    const particleCount = 50 * (timeLeft / duration);
+                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: Math.random() * (0.9 - 0.1) + 0.1, y: Math.random() - 0.2 } }));
+                }, 250);
+            }
+        };
+
+const deacc = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
+const sameWord = (a, b) => a === b || deacc(a) === deacc(b);
+
+const rainFlowers = () => {
+    const emojis = ['🌸', '🌼', '🌺', '🌷', '💮', '🌻'];
+    const box = document.createElement('div');
+    box.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden';
+    for (let i = 0; i < 60; i++) {
+        const f = document.createElement('span'); f.textContent = emojis[i % emojis.length]; f.className = 'flower-fall';
+        f.style.left = Math.random() * 100 + '%'; f.style.fontSize = (22 + Math.random() * 26) + 'px';
+        f.style.animationDuration = (3 + Math.random() * 3) + 's'; f.style.animationDelay = (Math.random() * 1.5) + 's';
+        box.appendChild(f);
+    }
+    document.body.appendChild(box); setTimeout(() => box.remove(), 8000);
+};
+
+// Ô chọn bài: nút giữ nguyên kích thước nhỏ, danh sách bung TO xuống phía dưới (không làm khung bao ngoài to ra)
+const ClusterPicker = () => {
+    const [open, setOpen] = useState(false);
+    const pick = (k) => { localStorage.setItem('tv1_cluster', k); window.location.reload(); };
+    return (
+        <div className="relative w-[210px] h-10">
+            <button onClick={() => setOpen(!open)} className="absolute top-0 left-0 w-full h-16 z-40 rounded-2xl border-4 border-emerald-500 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-black text-2xl shadow-lg flex items-center justify-center gap-2">📚 Bài {CLUSTER} ▾</button>
+            {open && (
+                <div className="absolute left-0 top-[72px] z-50 bg-white border-2 border-emerald-400 shadow-xl p-2 w-[min(92vw,210px)] space-y-1.5 rounded-2xl">
+                    <p className="font-black text-emerald-700 text-sm text-center">📚 Chọn cụm bài</p>
+                    {Object.keys(CLUSTER_DATA).map(k => (
+                        <button key={k} onClick={() => pick(k)} className={`w-full py-1.5 rounded-xl font-black text-lg border-2 transition-all ${k === CLUSTER ? 'bg-emerald-500 text-white border-emerald-700' : 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100'}`}>Bài {k}</button>
+                    ))}
+                    <button onClick={() => setOpen(false)} className="w-full py-1 rounded-lg font-bold text-xs text-slate-500 bg-slate-100">Đóng</button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// Đọc đoạn: chữ trước đọc xong thì chữ sau mới được tính
+const ParagraphReader = ({ lines, kind, onFinish }) => {
+    const tokens = React.useMemo(() => lines.flatMap(ln => ln.split(/\s+/).filter(Boolean).map(w => cleanStr(w))).filter(Boolean), [lines]);
+    const n = tokens.length;
+    const [pos, setPos] = useState(0);
+    const [listening, setListening] = useState(false);
+    const posRef = useRef(0), baseRef = useRef(0), recRef = useRef(null), wantRef = useRef(false), doneRef = useRef(false);
+
+    const stop = () => { wantRef.current = false; try { recRef.current && recRef.current.stop(); } catch (e) {} setListening(false); };
+    const advance = (p) => {
+        if (p > posRef.current) { posRef.current = p; setPos(p); }
+        if (p >= n && !doneRef.current) { doneRef.current = true; stop(); rainFlowers(); onFinish(); }
+    };
+    const start = () => {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) return alert("Trình duyệt không hỗ trợ. Dùng Google Chrome!");
+        if (window.responsiveVoice) window.responsiveVoice.cancel();
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        wantRef.current = true;
+        const begin = () => {
+            const rec = new SR(); rec.lang = 'vi-VN'; rec.continuous = true; rec.interimResults = true;
+            baseRef.current = posRef.current;
+            rec.onresult = (e) => {
+                let txt = ''; for (let i = 0; i < e.results.length; i++) txt += ' ' + e.results[i][0].transcript;
+                const spoken = cleanStr(txt).split(/\s+/).filter(Boolean);
+                let p = baseRef.current;
+                for (const w of spoken) { if (p < n && sameWord(w, tokens[p])) p++; }
+                advance(p);
+            };
+            rec.onerror = () => {};
+            rec.onend = () => { if (wantRef.current && !doneRef.current) setTimeout(() => { if (wantRef.current) begin(); }, 200); else setListening(false); };
+            recRef.current = rec; try { rec.start(); setListening(true); } catch (e) {}
+        };
+        begin();
+    };
+    const skip = () => { if (!doneRef.current) { baseRef.current = posRef.current + 1; advance(posRef.current + 1); } };
+    const restart = () => { stop(); doneRef.current = false; posRef.current = 0; baseRef.current = 0; setPos(0); };
+
+    useEffect(() => {
+        const h = (e) => {
+            if (e.code !== 'Space' || ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+            e.preventDefault(); if (doneRef.current) return; wantRef.current ? stop() : start();
+        };
+        window.addEventListener('keydown', h);
+        return () => { window.removeEventListener('keydown', h); wantRef.current = false; try { recRef.current && recRef.current.stop(); } catch (e) {} };
+    }, []);
+
+    let idx = 0;
+    return (
+        <div>
+            <div className="my-4 py-6 px-4 bg-emerald-50 rounded-2xl border-2 border-emerald-200 shadow-inner text-left space-y-1">
+                {(kind === 'thơ' ? lines : [lines.join(' ')]).map((ln, li) => (
+                    <p key={li} className="text-2xl sm:text-3xl font-black leading-loose">
+                        {ln.split(/\s+/).filter(Boolean).map((w, wi) => {
+                            const my = cleanStr(w) ? idx++ : -1;
+                            const st = my < 0 ? 'done' : my < pos ? 'done' : my === pos ? 'cur' : 'todo';
+                            return <span key={wi} className={'word-' + st}>{w}{' '}</span>;
+                        })}
+                    </p>
+                ))}
+            </div>
+            <div className="h-3 bg-slate-200 rounded-full overflow-hidden mb-1"><div className="h-full bg-emerald-500 transition-all" style={{ width: (Math.min(pos, n) / n * 100) + '%' }}></div></div>
+            <p className="text-xs font-bold text-slate-500 mb-3">Đã đọc {Math.min(pos, n)} / {n} chữ</p>
+            <div className="flex items-center justify-center gap-3">
+                <button onClick={() => (listening ? stop() : start())} className={`w-20 h-20 rounded-full text-3xl text-white font-bold flex items-center justify-center transition-all ${listening ? 'bg-red-500 pulse-ring' : 'bg-emerald-600 hover:bg-emerald-500 btn-3d border-emerald-800'}`}>{listening ? '🎙️' : '🎤'}</button>
+                <button onClick={skip} className="bg-amber-100 text-amber-800 border border-amber-300 px-3 py-2 rounded-xl font-bold text-sm">⏭️ Bỏ qua chữ</button>
+                <button onClick={restart} className="bg-slate-100 text-slate-700 border border-slate-300 px-3 py-2 rounded-xl font-bold text-sm">🔄 Đọc lại</button>
+            </div>
+            <p className="mt-2 text-sm font-bold text-slate-500">{listening ? "AI đang nghe bé đọc..." : "Bấm Micro hoặc phím [SPACE] để bắt đầu đọc"}</p>
+        </div>
+    );
+};
+
+        const App = () => {
+            const [adminPassword, setAdminPassword] = useState(() => localStorage.getItem(STORAGE_KEY_PASS) || ADMIN_PASSWORD_DEFAULT);
+            const [data, setData] = useState(() => {
+                const saved = localStorage.getItem(STORAGE_KEY_DATA);
+                if (saved) {
+                    try {
+                        const d = JSON.parse(saved);
+                        // Chỉ dùng dữ liệu đã lưu nếu khớp nội dung hiện tại của cụm bài này (tránh dính dữ liệu cũ)
+                        const s1 = new Set(rawPart1Database), s3 = new Set(rawPart3Database), s2 = new Set(rawPart2Database.map(x => x.lines.join(' ')));
+                        const ok = d && d.part1 && d.part2 && d.part3 && d.part1.every(x => s1.has(x)) && d.part3.every(x => s3.has(x)) && d.part2.every(x => x && x.lines && s2.has(x.lines.join(' ')));
+                        if (ok) return d;
+                    } catch (e) {}
+                }
+                return initialRawData;
+            });
+            const [completedHistory, setCompletedHistory] = useState(() => {
+                const savedHistory = localStorage.getItem(STORAGE_KEY_HISTORY);
+                if (savedHistory) { try { return JSON.parse(savedHistory); } catch (e) {} }
+                return { p1: [], p2: [], p3: [] };
+            });
+
+            // State cài đặt mức độ đọc (Cập nhật mặc định: Mức đạt 30%, Mức xuất sắc 60%)
+            const [passThreshold, setPassThreshold] = useState(() => {
+                const saved = localStorage.getItem(STORAGE_KEY_PASS_THRESH);
+                return saved !== null ? Number(saved) : 30;
+            }); 
+            const [perfectThreshold, setPerfectThreshold] = useState(() => {
+                const saved = localStorage.getItem(STORAGE_KEY_PERFECT_THRESH);
+                return saved !== null ? Number(saved) : 60;
+            }); 
+
+            const [activeTab, setActiveTab] = useState('p1');
+            const [indices, setIndices] = useState({ p1: 0, p2: 0, p3: 0 });
+            const [scores, setScores] = useState({ p1: 0, p2: 0, p3: 0 });
+            const [isCompleted, setIsCompleted] = useState({ p1: false, p2: false, p3: false });
+            const [showMilestone, setShowMilestone] = useState(false);
+
+            const [isListening, setIsListening] = useState(false);
+            const [spokenText, setSpokenText] = useState("");
+            const [feedbackState, setFeedbackState] = useState({ status: null, msg: '' });
+            const [p3Input, setP3Input] = useState("");
+            const [reviewModal, setReviewModal] = useState({ open: false, part: null });
+
+            const [isAdminAuth, setIsAdminAuth] = useState(false);
+            const [passInput, setPassInput] = useState('');
+            const [loginError, setLoginError] = useState('');
+
+            const recognitionRef = useRef(null);
+            const activeTabRef = useRef(activeTab);
+            const indicesRef = useRef(indices);
+            const passThresholdRef = useRef(passThreshold);
+            const perfectThresholdRef = useRef(perfectThreshold);
+
+            useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
+            useEffect(() => { indicesRef.current = indices; }, [indices]);
+            useEffect(() => { passThresholdRef.current = passThreshold; }, [passThreshold]);
+            useEffect(() => { perfectThresholdRef.current = perfectThreshold; }, [perfectThreshold]);
             
-            { word: "bà ba", "spell": "bờ a ba huyền bà, bờ a ba, bà ba" }, { word: "ba bà", "spell": "bờ a ba, bờ a ba huyền bà, ba bà" },
-            { word: "ca ba", "spell": "cờ a ca, bờ a ba, ca ba" }, { word: "ba ba", "spell": "bờ a ba, bờ a ba, ba ba" },
-            { word: "be bé", "spell": "bờ e be, bờ e be sắc bé, be bé" }, { word: "bề bề", "spell": "bờ ê bê huyền bề, bờ ê bê huyền bề, bề bề" },
-            { word: "bế bé", "spell": "bờ ê bê sắc bế, bờ e be sắc bé, bế bé" }, { word: "bè bè", "spell": "bờ e be huyền bè, bờ e be huyền bè, bè bè" },
-            { word: "ba bé", "spell": "bờ a ba, bờ e be sắc bé, ba bé" }, { word: "bà bè", "spell": "bờ a ba huyền bà, bờ e be huyền bè, bà bè" },
-            { word: "bè cá", "spell": "bờ e be huyền bè, cờ a ca sắc cá, bè cá" }, { word: "bó cỏ", "spell": "bờ ô bo sắc bó, cờ o co hỏi cỏ, bó cỏ" },
-            { word: "cổ cò", "spell": "cờ ô cô hỏi cổ, cờ o co huyền cò, cổ cò" }, { word: "bò bê", "spell": "bờ o bo huyền bò, bờ ê bê, bò bê" },
-            { word: "ca đá", "spell": "cờ a ca, đờ a đa sắc đá, ca đá" }, { word: "đa đa", "spell": "đờ a đa, đờ a đa, đa đa" },
-            { word: "da dẻ", "spell": "dờ a da, dờ e de hỏi dẻ, da dẻ" }, { word: "da cá", "spell": "dờ a da, cờ a ca sắc cá, da cá" },
-            { word: "bờ cỏ", "spell": "bờ ơ bơ huyền bờ, cờ o co hỏi cỏ, bờ cỏ" }, { word: "cờ đỏ", "spell": "cờ ơ cơ huyền cờ, đờ o đo hỏi đỏ, cờ đỏ" },
-            { word: "cá cờ", "spell": "cờ a ca sắc cá, cờ ơ cơ huyền cờ, cá cờ" }, { word: "ô đỏ", "spell": "ô, đờ o đo hỏi đỏ, ô đỏ" },
-            { word: "đo đỏ", "spell": "đờ o đo, đờ o đo hỏi đỏ, đo đỏ" }, { word: "đỗ đỏ", "spell": "đờ ô đô ngã đỗ, đờ o đo hỏi đỏ, đỗ đỏ" },
-            { word: "dỗ bé", "spell": "dờ ô dô ngã dỗ, bờ e be sắc bé, dỗ bé" }, { word: "đi đò", "spell": "đờ i đi, đờ o đo huyền đò, đi đò" },
-            { word: "đá kì", "spell": "đờ a đa sắc đá, ka i ki huyền kì, đá kì" }, { word: "bi bộ", "spell": "bờ i bi, bờ ô bô nặng bộ, bi bộ" },
-            { word: "ê ke", "spell": "ê, ka e ke, ê ke" }, { word: "kì cọ", "spell": "ka i ki, cờ o co nặng cọ, kì cọ" },
-            { word: "đi bộ", "spell": "đờ i đi, bờ ô bô nặng bộ, đi bộ" }, { word: "kì đà", "spell": "ka i ki huyền kì, đờ a đa huyền đà, kì đà" },
-            { word: "kề cà", "spell": "ka ê kê huyền kề, cờ a ca huyền cà, kề cà" }, { word: "lọ hồ", "spell": "lờ o lo nặng lọ, hờ ô hô huyền hồ, lọ hồ" },
-            { word: "lá cọ", "spell": "lờ a la sắc lá, cờ o co nặng cọ, lá cọ" }, { word: "lễ độ", "spell": "lờ ê lê ngã lễ, đờ ô đô nặng độ, lễ độ" },
-            { word: "kì lạ", "spell": "ka i ki huyền kì, lờ a la nặng lạ, kì lạ" }, { word: "hồ cá", "spell": "hờ ô hô huyền hồ, hồ cá" },
-            { word: "ba lô", "spell": "bờ a ba, lờ ô lô, ba lô" }, { word: "bó hẹ", "spell": "bờ o bo sắc bó, hờ e he nặng hẹ, bó hẹ" },
-            { word: "lề hè", "spell": "lờ ê lê huyền lề, hờ e he huyền hè, lề hè" }, { word: "đu đủ", "spell": "đờ u đu, đờ u đu hỏi đủ, đu đủ" },
-            { word: "cá dữ", "spell": "cờ a ca sắc cá, dờ u du ngã dữ, cá dữ" }, { word: "cũ kĩ", "spell": "cờ u cu ngã cũ, ka i ki ngã kĩ, cũ kĩ" },
-            { word: "bé bự", "spell": "bờ e be sắc bé, bờ ư bư nặng bự, bé bự" }, { word: "cù kì", "spell": "cờ u cu huyền cù, ka i ki huyền kì, cù kì" },
-            { word: "cự li", "spell": "cờ ư cư nặng cự, lờ i li, cự li" }, { word: "bà cụ", "spell": "bờ a ba huyền bà, cờ u cu nặng cụ, bà cụ" },
-            { word: "ô dù", "spell": "ô, dờ u du huyền dù, ô dù" }, { word: "chữ kí", "spell": "chờ ư chư ngã chữ, ka i ki sắc kí, chữ kí" },
-            { word: "cá kho", "spell": "cờ a ca sắc cá, khờ o kho, cá kho" }, { word: "chả cá", "spell": "chờ a cha hỏi chả, cờ a ca sắc cá, chả cá" },
-            { word: "khe đá", "spell": "khờ e khe, đờ a đa sắc đá, khe đá" }, { word: "lá khô", "spell": "lờ a la sắc lá, khờ ô khô, lá khô" },
-            { word: "chè kho", "spell": "chờ e che huyền chè, khờ o kho, chè kho" }, { word: "khe khẽ", "spell": "khờ e khe, khờ e khe ngã khẽ, khe khẽ" },
-            { word: "chú khỉ", "spell": "chờ u chu sắc chú, khờ i khi hỏi khỉ, chú khỉ" }, { word: "kè đá", "spell": "ka e ke huyền kè, đờ a đa sắc đá, kè đá" },
-            { word: "bó kê", "spell": "bờ o bo sắc bó, ka ê kê, bó kê" }, { word: "chà là", "spell": "chờ a cha huyền chà, lờ a la huyền là, chà là" },
-            { word: "chú hề", "spell": "chờ u chu sắc chú, hờ ê hê huyền hề, chú hề" }, { word: "bò kho", "spell": "bờ o bo huyền bò, khờ o kho, bò kho" },
-            { word: "chở đò", "spell": "chờ ơ chơ hỏi chở, đờ o đo huyền đò, chở đò" }, { word: "ô li", "spell": "ô, lờ i li, ô li" }
-        ];
+            useEffect(() => { localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(data)); }, [data]);
+            useEffect(() => { localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(completedHistory)); }, [completedHistory]);
+            useEffect(() => { localStorage.setItem(STORAGE_KEY_PASS_THRESH, passThreshold); }, [passThreshold]);
+            useEffect(() => { localStorage.setItem(STORAGE_KEY_PERFECT_THRESH, perfectThreshold); }, [perfectThreshold]);
 
-        const allSentences = [
-            "A, ba ba!", "Cá be bé.", "Bà bế bé.", "Bè be bé.", "Bé bê ca.", "Cô có cá, có cả cà.", 
-            "Bà bế bé, cô Ba bó cỏ.", "Cô có ca đá.", "Bố đố bé.", "Bé có cờ đỏ.", "Bò, bê ở bờ đê.", 
-            "Ở bờ đê có dế.", "Bé có bộ đồ đỏ, ô đỏ.", "Bé đi bộ ở bờ đê.", "Bố kê bể cá ở kệ.", 
-            "Bé có ba lô.", "Bà có lá hẹ.", "Bé bị ho, bà bế bé.", "Bố bổ đu đủ.", "Ô bà đã cũ.", 
-            "Bé đi khe khẽ.", "Kỳ đà bò ở khe đá.", "Hà kẻ ô li.", "Dì Lê đi chợ.", "Bà có chè kho.", 
-            "Bố chở bé đi Bờ Hồ."
-        ];
+            useEffect(() => {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (SpeechRecognition) {
+                    const rec = new SpeechRecognition(); rec.lang = 'vi-VN'; rec.interimResults = false; rec.maxAlternatives = 1;
+                    rec.onstart = () => { setIsListening(true); setSpokenText(""); setFeedbackState({ status: null, msg: '' }); };
+                    rec.onend = () => setIsListening(false);
+                    rec.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        setSpokenText(transcript); checkSpeechResult(transcript);
+                    };
+                    rec.onerror = () => setIsListening(false);
+                    recognitionRef.current = rec;
+                }
+            }, [activeTab, indices, data]);
 
-        const rawPart1Database = allWords;
-        const rawPart2Database = [...allSentences];
-        
-        const rawPart3Database = allWords
-            .filter(w => w.word.trim().includes(" "))
-            .map(w => w.word)
-            .concat([...allSentences]);
+            const toggleListening = () => {
+                if (!recognitionRef.current) return alert("Trình duyệt không hỗ trợ. Dùng Google Chrome!");
+                isListening ? recognitionRef.current.stop() : recognitionRef.current.start();
+            };
+
+            const checkSpeechResult = (transcript) => {
+                const currentTab = activeTabRef.current;
+                const curIdx = indicesRef.current[currentTab];
+                const currentPassThreshold = passThresholdRef.current;
+                const currentPerfectThreshold = perfectThresholdRef.current;
+
+                if (currentTab === 'none') {
+                    const currentObj = data.part1[curIdx];
+                    const percent = calculateWordScore(transcript, currentObj);
+                    const targetWord = cleanStr(currentObj?.word);
+
+                    if (percent >= currentPassThreshold) {
+                        setScores(prev => { const newScore = prev.p1 + 1; if (newScore > 0 && newScore % 10 === 0) { triggerMegaFireworks(); setShowMilestone(true); } return { ...prev, p1: newScore }; });
+                        setCompletedHistory(prev => { if (!prev.p1.includes(targetWord)) return { ...prev, p1: [...prev.p1, targetWord] }; return prev; });
+                        const successMsg = percent >= currentPerfectThreshold ? `✔️ Tuyệt vời! Bé đọc chính xác đạt mức xuất sắc! (${percent}%)` : `✔️️ Bé đọc rất tốt! (${percent}%)`;
+                        setFeedbackState({ status: 'correct', msg: successMsg });
+                    } else { setFeedbackState({ status: 'wrong', msg: `❌ Chưa đạt yêu cầu (${percent}%). AI nghe được: "${transcript}". Bé hãy thử lại nhé!` }); }
+                } else if (currentTab === 'p1') {
+                    const targetSentenceOrigin = data.part1[curIdx];
+                    const percent = calculateSentenceScore(transcript, targetSentenceOrigin);
+                    const targetSentence = cleanStr(targetSentenceOrigin);
+
+                    if (percent >= currentPassThreshold) {
+                        setScores(prev => { const newScore = prev.p1 + 1; if (newScore > 0 && newScore % 10 === 0) { triggerMegaFireworks(); setShowMilestone(true); } return { ...prev, p1: newScore }; });
+                        setCompletedHistory(prev => { if (!prev.p1.includes(targetSentenceOrigin)) return { ...prev, p1: [...prev.p1, targetSentenceOrigin] }; return prev; });
+                        const successMsg = percent >= currentPerfectThreshold ? `✔️ Rất xuất sắc! Bé đọc câu đạt mức hoàn hảo! (${percent}%)` : `✔️ Bé đọc câu rất tuyệt vời! (${percent}%)`;
+                        setFeedbackState({ status: 'correct', msg: successMsg });
+                    } else { setFeedbackState({ status: 'wrong', msg: `❌ Chưa đạt yêu cầu (${percent}%). AI nghe được: "${transcript}". Bé thử đọc lại nhé!` }); }
+                }
+            };
+
+            useEffect(() => {
+                if (activeTab === 'p3' && !isCompleted.p3 && data.part3[indices.p3]) {
+                    speakText(spellPunct(data.part3[indices.p3]), 0.6); setFeedbackState({ status: null, msg: '' }); setP3Input('');
+                }
+            }, [indices.p3, activeTab, isCompleted.p3]);
+
+            const checkP3Answer = (e) => {
+                if (e) e.preventDefault(); if (feedbackState.status === 'correct') return;
+                const targetOrigin = data.part3[indices.p3]; const target = normP3(targetOrigin); const studentAnswer = normP3(p3Input);
+
+                if (target === studentAnswer) {
+                    triggerFireworks();
+                    setScores(prev => { const newScore = prev.p3 + 1; if (newScore > 0 && newScore % 10 === 0) { triggerMegaFireworks(); setShowMilestone(true); } return { ...prev, p3: newScore }; });
+                    setCompletedHistory(prev => { if (!prev.p3.includes(targetOrigin)) return { ...prev, p3: [...prev.p3, targetOrigin] }; return prev; });
+                    setFeedbackState({ status: 'correct', msg: '🎉 Bé giỏi lắm! Bé trả lời đúng rồi! (+1 điểm)' });
+                } else { setFeedbackState({ status: 'wrong', msg: '❌ Chưa đúng rồi, bé hãy kiểm tra lại chữ và các dấu câu vừa gõ nhé!' }); }
+            };
+
+            const nextQuestion = (tab) => {
+                setFeedbackState({ status: null, msg: '' }); setSpokenText(''); setP3Input('');
+                if (tab === 'p1') { indices.p1 < data.part1.length - 1 ? setIndices(prev => ({ ...prev, p1: prev.p1 + 1 })) : setIsCompleted(prev => ({ ...prev, p1: true })); }
+                else if (tab === 'p2') { indices.p2 < data.part2.length - 1 ? setIndices(prev => ({ ...prev, p2: prev.p2 + 1 })) : setIsCompleted(prev => ({ ...prev, p2: true })); }
+                else if (tab === 'p3') { indices.p3 < data.part3.length - 1 ? setIndices(prev => ({ ...prev, p3: prev.p3 + 1 })) : setIsCompleted(prev => ({ ...prev, p3: true })); }
+            };
+
+            const rollDiceNewQuestion = (tab) => {
+                setFeedbackState({ status: null, msg: '' }); setSpokenText(''); setP3Input('');
+                if (tab === 'p1') { const rnd = Math.floor(Math.random() * rawPart1Database.length); const updated = [...data.part1]; updated[indices.p1] = rawPart1Database[rnd]; setData(prev => ({ ...prev, part1: updated })); } 
+                else if (tab === 'p2') { const rnd = Math.floor(Math.random() * rawPart2Database.length); const updated = [...data.part2]; updated[indices.p2] = rawPart2Database[rnd]; setData(prev => ({ ...prev, part2: updated })); } 
+                else if (tab === 'p3') { const rnd = Math.floor(Math.random() * rawPart3Database.length); const updated = [...data.part3]; updated[indices.p3] = rawPart3Database[rnd]; setData(prev => ({ ...prev, part3: updated })); speakText(rawPart3Database[rnd], 0.6); }
+            };
+
+            const restartTab = (tabName) => { setIsCompleted(prev => ({ ...prev, [tabName]: false })); setIndices(prev => ({ ...prev, [tabName]: 0 })); setScores(prev => ({ ...prev, [tabName]: 0 })); setFeedbackState({ status: null, msg: '' }); };
+
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+                    if (e.code === 'Space') { e.preventDefault(); if (feedbackState.status === 'correct') { nextQuestion(activeTab); } else if (activeTab !== 'p2') { toggleListening(); } }
+                };
+                window.addEventListener('keydown', handleKeyDown); return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [feedbackState, activeTab, indices]);
+
+const finishParagraph = () => {
+    const item = data.part2[indicesRef.current.p2]; const key = item.lines.join(' ');
+    setScores(prev => { const s = prev.p2 + 1; if (s % 10 === 0) { triggerMegaFireworks(); setShowMilestone(true); } return { ...prev, p2: s }; });
+    setCompletedHistory(prev => prev.p2.includes(key) ? prev : { ...prev, p2: [...prev.p2, key] });
+    setFeedbackState({ status: 'correct', msg: '🌸 Tuyệt vời! Bé đã đọc xong cả đoạn!' });
+};
+            const handleAdminLogin = (e) => { e.preventDefault(); if (passInput === adminPassword) { setIsAdminAuth(true); setLoginError(''); setPassInput(''); } else { setLoginError('Mật khẩu không đúng!'); } };
+
+            const handleUpdateCounts = (p1, p2, p3) => {
+                const n1 = Math.max(1, Math.min(200, p1)); const n2 = Math.max(1, Math.min(200, p2)); const n3 = Math.max(1, Math.min(300, p3));
+                setData({ p1Count: n1, p2Count: n2, p3Count: n3, part1: generateQuestionsList(rawPart1Database, n1), part2: generateQuestionsList(rawPart2Database, n2), part3: generateQuestionsList(rawPart3Database, n3) });
+                setIndices({ p1: 0, p2: 0, p3: 0 }); setScores({ p1: 0, p2: 0, p3: 0 }); setIsCompleted({ p1: false, p2: false, p3: false });
+            };
+
+            const handleResetDefault = () => {
+                if (window.confirm("Khôi phục mặc định và xoá lịch sử học tập?")) {
+                    setData(initialRawData); setAdminPassword(ADMIN_PASSWORD_DEFAULT); setCompletedHistory({ p1: [], p2: [], p3: [] });
+                    setPassThreshold(30); setPerfectThreshold(60);
+                    localStorage.removeItem(STORAGE_KEY_DATA); localStorage.removeItem(STORAGE_KEY_PASS); localStorage.removeItem(STORAGE_KEY_HISTORY);
+                    localStorage.removeItem(STORAGE_KEY_PASS_THRESH); localStorage.removeItem(STORAGE_KEY_PERFECT_THRESH); 
+                    alert("Đã khôi phục thành công!");
+                }
+            };
+
+            return (
+                <div className="max-w-5xl mx-auto relative w-full">
+                    
+                    <header className="kid-card p-4 mb-6 flex flex-wrap items-center justify-between gap-3 bg-white shadow-md">
+                        <h1 className="text-xl sm:text-2xl font-black text-emerald-600 flex items-center gap-2"><span>📖</span> Ôn Tập Tiếng Việt 1 Bài {CLUSTER}</h1>
+<ClusterPicker />
+                        <nav className="flex flex-wrap gap-2">
+                            <button onClick={() => setActiveTab('p1')} className={`px-3 py-2 rounded-xl font-bold text-sm btn-3d ${activeTab === 'p1' ? 'bg-sky-500 text-white border-sky-700' : 'bg-sky-100 text-sky-600 border-sky-300'}`}>📖 1. Đọc Từ & Câu</button>
+                            <button onClick={() => setActiveTab('p2')} className={`px-3 py-2 rounded-xl font-bold text-sm btn-3d ${activeTab === 'p2' ? 'bg-emerald-500 text-white border-emerald-700' : 'bg-emerald-100 text-emerald-600 border-emerald-300'}`}>📜 2. Đọc Đoạn</button>
+                            <button onClick={() => setActiveTab('p3')} className={`px-3 py-2 rounded-xl font-bold text-sm btn-3d ${activeTab === 'p3' ? 'bg-purple-500 text-white border-purple-700' : 'bg-purple-100 text-purple-600 border-purple-300'}`}>✍️ 3. Nghe & Gõ</button>
+                            <button onClick={() => setActiveTab('admin')} className={`px-3 py-2 rounded-xl font-bold text-sm btn-3d ${activeTab === 'admin' ? 'bg-slate-700 text-white border-slate-900' : 'bg-slate-200 text-slate-700 border-slate-400'}`}>🔒 Giáo Viên</button>
+                        </nav>
+                    </header>
+
+                    <main className="w-full space-y-6">
+                        {activeTab === 'p1' && !isCompleted.p1 && data.part1 && (
+                            <div className="max-w-xl mx-auto kid-card p-6 text-center w-full">
+                                <div className="flex justify-between items-center text-sm font-bold text-slate-400 mb-4">
+                                    <span>Câu {indices.p1 + 1} / {data.part1.length}</span>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => rollDiceNewQuestion('p1')} className="bg-amber-100 hover:bg-amber-200 text-amber-800 px-3 py-1.5 rounded-lg border border-amber-300 font-bold text-xs">🎲 Đổi câu mới</button>
+                                        <button onClick={() => setReviewModal({ open: true, part: 'p1' })} className="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-3 py-1.5 rounded-lg border border-emerald-300 font-bold text-xs">📚 Ôn tập toàn bộ</button>
+                                    </div>
+                                    <span className="text-emerald-600 font-extrabold">Điểm: {scores.p1}</span>
+                                </div>
+                                <p className="text-xl font-black text-slate-700 mb-2">Bé hãy đọc to từ hoặc câu dưới đây:</p>
+                                <div className="text-4xl font-black text-emerald-700 my-6 py-8 px-4 bg-emerald-50 rounded-2xl border-2 border-emerald-200 shadow-inner leading-relaxed">{data.part1[indices.p1]}</div>
+                                <button onClick={() => speakText(data.part1[indices.p1])} className="mb-6 bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-2 px-5 rounded-full btn-3d border-emerald-700 inline-flex items-center gap-2 text-base">🔊 AI đọc mẫu</button>
+                                
+                                <div>
+                                    <button onClick={toggleListening} className={`w-20 h-20 rounded-full text-3xl text-white font-bold mx-auto flex items-center justify-center transition-all ${isListening ? 'bg-red-500 pulse-ring' : 'bg-emerald-600 hover:bg-emerald-500 btn-3d border-emerald-800'}`}>{isListening ? '🎙️' : '🎤'}</button>
+                                    <p className="mt-2 text-sm font-bold text-slate-500">{isListening ? "AI đang nghe bé đọc..." : "Bấm Micro hoặc phím [SPACE] để đọc"}</p>
+                                </div>
+                                {isListening && <div className="mt-6 p-4 rounded-xl border-2 bg-emerald-50 border-emerald-200 text-emerald-700 font-bold text-lg"><span>AI đang lắng nghe bé đọc câu</span><span className="dots-loading"></span></div>}
+                                {feedbackState.status === 'correct' && <div className="mt-6 p-4 rounded-2xl bg-green-50 border-2 border-green-200"><p className="text-green-600 font-black text-xl mb-3">{feedbackState.msg}</p><button onClick={() => nextQuestion('p1')} className="bg-green-500 text-white font-bold py-3 px-8 rounded-full btn-3d border-green-700 text-lg">➡️ Câu tiếp theo (Nhấn Phím Space)</button></div>}
+                                {feedbackState.status === 'wrong' && <div className="mt-6 p-3 rounded-xl bg-red-50 border-2 border-red-200 text-red-500 font-bold">{feedbackState.msg}</div>}
+                            </div>
+                        )}
+
+{activeTab === 'p2' && !isCompleted.p2 && data.part2 && (
+    <div className="max-w-3xl mx-auto kid-card p-6 text-center w-full">
+        <div className="flex justify-between items-center text-sm font-bold text-slate-400 mb-4">
+            <span>Đoạn {indices.p2 + 1} / {data.part2.length}</span>
+            <div className="flex gap-2">
+                <button onClick={() => rollDiceNewQuestion('p2')} className="bg-amber-100 hover:bg-amber-200 text-amber-800 px-3 py-1.5 rounded-lg border border-amber-300 font-bold text-xs">🎲 Đổi đoạn mới</button>
+                <button onClick={() => setReviewModal({ open: true, part: 'p2' })} className="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-3 py-1.5 rounded-lg border border-emerald-300 font-bold text-xs">📚 Ôn tập toàn bộ</button>
+            </div>
+            <span className="text-emerald-600 font-extrabold">Điểm: {scores.p2}</span>
+        </div>
+        <p className="text-xl font-black text-slate-700">Bé hãy đọc to cả đoạn dưới đây:</p>
+        <p className="text-xs font-bold text-slate-400">Bé đọc xong chữ nào thì chữ đó sáng lên, rồi mới đọc chữ tiếp theo nhé!</p>
+        <ParagraphReader key={indices.p2 + data.part2[indices.p2].lines[0] + data.part2[indices.p2].kind} lines={data.part2[indices.p2].lines} kind={data.part2[indices.p2].kind} onFinish={finishParagraph} />
+        <button onClick={() => speakText(data.part2[indices.p2].lines.join(' '), 0.8)} className="mt-4 bg-emerald-500 hover:bg-emerald-400 text-white font-bold py-2 px-5 rounded-full btn-3d border-emerald-700 inline-flex items-center gap-2 text-base">🔊 AI đọc mẫu cả đoạn</button>
+        {feedbackState.status === 'correct' && <div className="mt-6 p-4 rounded-2xl bg-green-50 border-2 border-green-200"><p className="text-green-600 font-black text-xl mb-3">{feedbackState.msg}</p><button onClick={() => nextQuestion('p2')} className="bg-green-500 text-white font-bold py-3 px-8 rounded-full btn-3d border-green-700 text-lg">➡️ Đoạn tiếp theo (Nhấn Phím Space)</button></div>}
+    </div>
+)}
+
+                        {activeTab === 'p3' && !isCompleted.p3 && data.part3 && (
+                            <div className="flex flex-col lg:flex-row gap-6 w-full justify-center items-start">
+                                
+                                {/* Cột trái: Bài tập Nghe & Gõ */}
+                                <div className="flex-1 w-full max-w-xl mx-auto kid-card p-6 text-center shadow-lg border-4 border-purple-300">
+                                    <div className="flex justify-between items-center text-sm font-bold text-slate-400 mb-4">
+                                        <span>Câu {indices.p3 + 1} / {data.part3.length}</span>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => rollDiceNewQuestion('p3')} className="bg-amber-100 hover:bg-amber-200 text-amber-800 px-3 py-1.5 rounded-lg border border-amber-300 font-bold text-xs">🎲 Đổi câu mới</button>
+                                            <button onClick={() => setReviewModal({ open: true, part: 'p3' })} className="bg-purple-100 hover:bg-purple-200 text-purple-800 px-3 py-1.5 rounded-lg border border-purple-300 font-bold text-xs">📚 Ôn tập toàn bộ</button>
+                                        </div>
+                                        <span className="text-emerald-600 font-extrabold">Điểm: {scores.p3}</span>
+                                    </div>
+                                    <p className="text-2xl font-black text-slate-700 mb-1">Lắng nghe và gõ lại:</p>
+                                    <p className="text-sm font-bold text-purple-600 mb-4">Nhớ gõ cả dấu câu: chấm . phẩy , chấm hỏi ? chấm than ! hai chấm : ngoặc kép " ba chấm …</p>
+                                    <button onClick={() => speakText(spellPunct(data.part3[indices.p3]), 0.6)} className="mb-8 bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 px-8 rounded-full btn-3d border-purple-800 inline-flex items-center gap-3 text-xl pulse-ring">🔊 Nghe AI đọc lại </button>
+                                    <form onSubmit={checkP3Answer} className="space-y-6 w-full mx-auto">
+                                        <input type="text" value={p3Input} onChange={(e) => setP3Input(e.target.value)} placeholder="Gõ câu trả lời (có cả dấu câu)..." className="p3-input w-full p-6 border-4 border-purple-300 rounded-2xl font-black text-center text-3xl sm:text-4xl text-slate-800 focus:border-purple-600 outline-none shadow-inner" autoFocus />
+                                        <button type="submit" className="w-full bg-purple-600 hover:bg-purple-500 text-white font-black py-4 rounded-2xl btn-3d border-purple-800 text-xl">✔️ Kiểm Tra</button>
+                                    </form>
+                                    {feedbackState.status === 'correct' && <div className="mt-8 p-5 rounded-2xl bg-green-50 border-2 border-green-200"><p className="text-green-600 font-black text-2xl mb-4">{feedbackState.msg}</p><button onClick={() => nextQuestion('p3')} className="bg-green-500 text-white font-bold py-4 px-10 rounded-full btn-3d border-green-700 text-xl">➡️ Tiếp theo (Space)</button></div>}
+                                    {feedbackState.status === 'wrong' && <div className="mt-6 p-4 rounded-xl bg-red-50 border-2 border-red-200 text-red-500 font-bold text-lg">{feedbackState.msg}</div>}
+                                </div>
+
+                                {/* Cột phải: Hướng dẫn Telex (Chỉ hiển thị khi đang ở P3) */}
+                                <div className="kid-card p-5 bg-purple-50 border-purple-200">
+                                <h3 className="text-lg font-black text-purple-800 border-b border-purple-200 pb-2 mb-3 flex items-center gap-2">
+                                    <span>⌨️</span> Hướng Dẫn Gõ Telex
+                                </h3>
+                                <div className="space-y-2 text-sm font-bold text-slate-700">
+                                    <div className="p-2 bg-white rounded-lg border border-purple-100 flex justify-between">
+                                        <span>Dấu Sắc ( s )</span>
+                                        <span className="text-purple-600">a + s = á</span>
+                                    </div>
+                                    <div className="p-2 bg-white rounded-lg border border-purple-100 flex justify-between">
+                                        <span>Dấu Huyền ( f )</span>
+                                        <span className="text-purple-600">a + f = à</span>
+                                    </div>
+                                    <div className="p-2 bg-white rounded-lg border border-purple-100 flex justify-between">
+                                        <span>Dấu Hỏi ( r )</span>
+                                        <span className="text-purple-600">a + r = ả</span>
+                                    </div>
+                                    <div className="p-2 bg-white rounded-lg border border-purple-100 flex justify-between">
+                                        <span>Dấu Ngã ( x )</span>
+                                        <span className="text-purple-600">a + x = ã</span>
+                                    </div>
+                                    <div className="p-2 bg-white rounded-lg border border-purple-100 flex justify-between">
+                                        <span>Dấu Nặng ( j )</span>
+                                        <span className="text-purple-600">a + j = ạ</span>
+                                    </div>
+                                    <div className="p-2 bg-white rounded-lg border border-purple-100 flex justify-between">
+                                        <span>Chữ Â / Ê / Ô</span>
+                                        <span className="text-purple-600">aa, ee, oo</span>
+                                    </div>
+                                    <div className="p-2 bg-white rounded-lg border border-purple-100 flex justify-between">
+                                        <span>Chữ Ă / Ơ / Ư</span>
+                                        <span className="text-purple-600">aw, ow, uw</span>
+                                    </div>
+                                    <div className="p-2 bg-white rounded-lg border border-purple-100 flex justify-between">
+                                        <span>Chữ Đ</span>
+                                        <span className="text-purple-600">dd = đ</span>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                        )}
+
+                        {/* Màn hình hoàn thành bài */}
+                        {['p1', 'p2', 'p3'].map(tab => (
+                            activeTab === tab && isCompleted[tab] && (
+                                <div key={tab} className="max-w-xl mx-auto kid-card p-8 text-center bg-white w-full shadow-lg">
+                                    <div className="text-6xl mb-4">🏆</div>
+                                    <h2 className="text-3xl font-black text-slate-800 mb-2">Hoàn Thành!</h2>
+                                    <p className="text-xl font-bold text-emerald-600 mb-6">Bé đạt {scores[tab]} / {data[`${tab}Count`]} điểm</p>
+                                    <button onClick={() => restartTab(tab)} className="bg-sky-500 text-white font-bold py-3 px-8 rounded-full btn-3d border-sky-700 text-lg">🔄 Làm lại từ đầu</button>
+                                </div>
+                            )
+                        ))}
+
+                        {/* Giao diện Admin */}
+                        {activeTab === 'admin' && (
+                            <div className="kid-card p-6 bg-white w-full max-w-xl mx-auto">
+                                {!isAdminAuth ? (
+                                    <div className="text-center py-6 space-y-4">
+                                        <div className="text-5xl">🔒</div>
+                                        <h2 className="text-2xl font-black text-slate-800">Khu Vực Giáo Viên</h2>
+                                        <form onSubmit={handleAdminLogin} className="space-y-4 max-w-xs mx-auto pt-2">
+                                            <input type="password" value={passInput} onChange={(e) => setPassInput(e.target.value)} placeholder="Nhập mật khẩu..." className="w-full p-3 border-2 border-slate-300 rounded-xl font-bold text-center focus:border-slate-600 outline-none" autoFocus />
+                                            {loginError && <p className="text-red-500 text-sm font-bold">{loginError}</p>}
+                                            <button type="submit" className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl btn-3d border-slate-950">🔓 Xác nhận</button>
+                                        </form>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-6">
+                                        <div className="flex justify-between items-center border-b pb-3">
+                                            <h2 className="text-2xl font-black text-slate-800">⚙️ Cấu Hình</h2>
+                                            <div className="flex gap-2">
+                                                <button onClick={handleResetDefault} className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-700 font-bold px-3 py-1.5 rounded-lg border border-amber-300">🔄 Khôi phục</button>
+                                                <button onClick={() => setIsAdminAuth(false)} className="text-xs bg-red-100 hover:bg-red-200 text-red-600 font-bold px-3 py-1.5 rounded-lg border border-red-300">🔒 Khóa lại</button>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Cấu hình Số lượng câu hỏi */}
+                                        <div className="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-200 space-y-4">
+                                            <h3 className="font-black text-emerald-800">📊 Số lượng câu hỏi (1-300):</h3>
+                                            <div className="flex justify-between"><span className="font-bold text-sm">Phần 1 (Đọc từ & câu):</span><input type="number" min="1" max="300" value={data.p1Count} onChange={(e) => handleUpdateCounts(Number(e.target.value), data.p2Count, data.p3Count)} className="w-24 p-1 border-2 rounded text-center" /></div>
+                                            <div className="flex justify-between"><span className="font-bold text-sm">Phần 2 (Đọc đoạn):</span><input type="number" min="1" max="300" value={data.p2Count} onChange={(e) => handleUpdateCounts(data.p1Count, Number(e.target.value), data.p3Count)} className="w-24 p-1 border-2 rounded text-center" /></div>
+                                            <div className="flex justify-between"><span className="font-bold text-sm">Phần 3 (Nghe & gõ):</span><input type="number" min="1" max="300" value={data.p3Count} onChange={(e) => handleUpdateCounts(data.p1Count, data.p2Count, Number(e.target.value))} className="w-24 p-1 border-2 rounded text-center" /></div>
+                                        </div>
+
+                                        {/* Cấu hình Ngưỡng điểm */}
+                                        <div className="bg-sky-50 p-4 rounded-2xl border-2 border-sky-200 space-y-4 mt-4">
+                                            <h3 className="font-black text-sky-800">🎯 Cài đặt mức độ đọc đúng (%):</h3>
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-bold text-sm text-slate-700">Mức Đạt (Pass):</span>
+                                                <input type="number" min="10" max="100" value={passThreshold} onChange={(e) => setPassThreshold(Number(e.target.value))} className="w-24 p-1 border-2 rounded text-center" />
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-bold text-sm text-slate-700">Mức Hoàn hảo (Perfect):</span>
+                                                <input type="number" min="10" max="100" value={perfectThreshold} onChange={(e) => setPerfectThreshold(Number(e.target.value))} className="w-24 p-1 border-2 rounded text-center" />
+                                            </div>
+                                            <p className="text-xs text-slate-500 italic">Hệ thống sẽ dựa vào mức Đạt để cho qua câu, và mức Hoàn hảo để dành lời khen đặc biệt cho học sinh.</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Modals Popup */}
+                    {showMilestone && (
+                        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+                            <div className="bg-white rounded-3xl p-8 text-center animate-bounce shadow-2xl border-4 border-yellow-400">
+                                <div className="text-8xl mb-4">🌟</div>
+                                <h2 className="text-4xl font-black text-red-500 mb-4">CHÚC MỪNG BÉ!</h2>
+                                <p className="text-2xl font-bold text-emerald-600">Bé đã xuất sắc hoàn thành thêm 10 câu!</p>
+                                <button onClick={() => setShowMilestone(false)} className="mt-6 bg-yellow-500 hover:bg-yellow-400 text-white font-black py-3 px-8 rounded-full btn-3d text-xl border-yellow-700">Tiếp tục nào!</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {reviewModal.open && (
+                        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+                            <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[85vh] p-6 overflow-y-auto shadow-2xl border-4 border-emerald-300">
+                                <div className="flex justify-between items-center border-b pb-3 mb-4 sticky top-0 bg-white z-10">
+                                    <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+                                        <span>📚</span> Bảng Ôn Tập Toàn Bộ
+                                        <span className="text-sm font-bold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-lg">({reviewModal.part === 'p1' ? rawPart1Database.length : reviewModal.part === 'p2' ? rawPart2Database.length : rawPart3Database.length} câu)</span>
+                                    </h3>
+                                    <button onClick={() => setReviewModal({ open: false, part: null })} className="text-gray-500 hover:text-red-500 font-black text-3xl leading-none">✖</button>
+                                </div>
+                                
+                                <div className={`grid gap-3 ${'grid-cols-1 sm:grid-cols-2'}`}>
+{reviewModal.part === 'p1' && rawPart1Database.map((item, idx) => (
+    <div key={idx} className={`p-3 rounded-xl border-2 flex justify-between items-center ${completedHistory.p1.includes(item) ? 'bg-green-50 border-green-300' : 'bg-sky-50 border-sky-200'}`}>
+        <p className={`font-black text-base flex items-center gap-2 ${completedHistory.p1.includes(item) ? 'text-green-700' : 'text-sky-800'}`}>{item} {completedHistory.p1.includes(item) && <span className="text-sm">✅</span>}</p>
+        <button onClick={() => speakText(item)} className={`${completedHistory.p1.includes(item) ? 'bg-green-500' : 'bg-sky-500'} text-white text-xs px-3 py-1.5 rounded-lg font-bold shrink-0 ml-2`}>🔊 Nghe</button>
+    </div>
+))}
+{reviewModal.part === 'p2' && rawPart2Database.map((item, idx) => { const key = item.lines.join(' '); const done = completedHistory.p2.includes(key); return (
+    <div key={idx} className={`p-3 rounded-xl border-2 flex justify-between items-start gap-2 sm:col-span-2 ${done ? 'bg-green-50 border-green-300' : 'bg-emerald-50 border-emerald-200'}`}>
+        <p className={`font-bold text-base ${done ? 'text-green-700' : 'text-emerald-800'}`}>{key} {done && <span className="text-sm">✅</span>}</p>
+        <button onClick={() => speakText(key, 0.8)} className="bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-bold shrink-0">🔊 Nghe</button>
+    </div>); })}
+                                    {reviewModal.part === 'p3' && rawPart3Database.map((item, idx) => (
+                                        <div key={idx} className={`p-3 rounded-xl border-2 flex justify-between items-center ${completedHistory.p3.includes(item) ? 'bg-green-50 border-green-300' : 'bg-purple-50 border-purple-200'}`}>
+                                            <p className={`font-black text-base flex items-center gap-2 ${completedHistory.p3.includes(item) ? 'text-green-700' : 'text-purple-800'}`}>{item} {completedHistory.p3.includes(item) && <span className="text-sm">✅</span>}</p>
+                                            <button onClick={() => speakText(spellPunct(item), 0.6)} className={`${completedHistory.p3.includes(item) ? 'bg-green-500' : 'bg-purple-500'} text-white text-xs px-3 py-1.5 rounded-lg font-bold shrink-0 ml-2`}>🔊 Nghe</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const BasicApp = (() => {
+        const ADMIN_PASSWORD_DEFAULT = "2002";
+        const STORAGE_KEY_DATA = "tv1_review_app_data_b3_" + CLUSTER;
+        const STORAGE_KEY_PASS = "tv1_review_admin_pass_b3_" + CLUSTER;
+        const STORAGE_KEY_HISTORY = "tv1_review_history_b3_" + CLUSTER;
+        // KEY lưu trữ cài đặt điểm số
+        const STORAGE_KEY_PASS_THRESH = "tv1_review_pass_thresh_b3_" + CLUSTER;
+        const STORAGE_KEY_PERFECT_THRESH = "tv1_review_perfect_thresh_b3_" + CLUSTER;
+
+        // ---- Đánh vần tự động (cụm 1-15 và 16-30) ----
+        const SP_INIT = [['ngh','ngờ'],['ng','ngờ'],['nh','nhờ'],['ph','phờ'],['th','thờ'],['tr','trờ'],['ch','chờ'],['kh','khờ'],['gh','gờ'],['gi','di'],['qu','quờ'],
+            ['b','bờ'],['c','cờ'],['d','dờ'],['đ','đờ'],['g','gờ'],['h','hờ'],['k','ka'],['l','lờ'],['m','mờ'],['n','nờ'],['r','rờ'],['s','sờ'],['t','tờ'],['v','vờ'],['x','xờ']];
+        const SP_TONES = { '\u0300': 'huyền', '\u0301': 'sắc', '\u0309': 'hỏi', '\u0303': 'ngã', '\u0323': 'nặng' };
+        const VOWEL_START = /^[aăâeêioôơuưyáàảãạ]/;
+        const spellSyl = (syl) => {
+            const s = syl.toLowerCase(); let tone = '', stripped = '';
+            for (const ch of s.normalize('NFD')) { if (SP_TONES[ch]) tone = SP_TONES[ch]; else stripped += ch; }
+            const base = stripped.normalize('NFC');
+            let name = '', vowel = base;
+            for (const [k, n] of SP_INIT) {
+                if (base.startsWith(k) && base.length > k.length && VOWEL_START.test(base.slice(k.length))) { name = n; vowel = base.slice(k.length); break; }
+            }
+            if (!name && base === 'gi') { name = 'gờ'; vowel = 'i'; }
+            if (name) return `${name} ${vowel} ${base}` + (tone ? ` ${tone} ${s}` : '');
+            return tone ? `${vowel} ${tone} ${s}` : vowel;
+        };
+        const spellWord = (w) => w.trim().split(/\s+/).map(spellSyl).join(', ') + ', ' + w.trim();
+
+        const CDB = CLUSTER_DATA[CLUSTER];
+        const allWords = CDB.words.map(w => ({ word: w, spell: spellWord(w) }));
+        const allSentences = [...new Set([...CDB.sentences.flatMap(splitByDot), ...CDB.paras.flatMap(p => splitByDot(p.lines.join(' ')))])];
+        const rawPart1Database = allWords;         // Phần 1: đánh vần
+        const rawPart2Database = [...allSentences]; // Phần 2: đọc câu
+        const rawPart3Database = [...allSentences]; // Phần 3: nghe & nhập câu
 
         const generateQuestionsList = (baseList, targetCount) => {
             let result = [...baseList];
@@ -314,20 +1649,20 @@
 
             useEffect(() => {
                 if (activeTab === 'p3' && !isCompleted.p3 && data.part3[indices.p3]) {
-                    speakText(data.part3[indices.p3], 0.6); setFeedbackState({ status: null, msg: '' }); setP3Input('');
+                    speakText(spellPunct(data.part3[indices.p3]), 0.6); setFeedbackState({ status: null, msg: '' }); setP3Input('');
                 }
             }, [indices.p3, activeTab, isCompleted.p3]);
 
             const checkP3Answer = (e) => {
                 if (e) e.preventDefault(); if (feedbackState.status === 'correct') return;
-                const targetOrigin = data.part3[indices.p3]; const target = cleanStr(targetOrigin); const studentAnswer = cleanStr(p3Input);
+                const targetOrigin = data.part3[indices.p3]; const target = normP3(targetOrigin); const studentAnswer = normP3(p3Input);
 
                 if (target === studentAnswer) {
                     triggerFireworks();
                     setScores(prev => { const newScore = prev.p3 + 1; if (newScore > 0 && newScore % 10 === 0) { triggerMegaFireworks(); setShowMilestone(true); } return { ...prev, p3: newScore }; });
                     setCompletedHistory(prev => { if (!prev.p3.includes(targetOrigin)) return { ...prev, p3: [...prev.p3, targetOrigin] }; return prev; });
                     setFeedbackState({ status: 'correct', msg: '🎉 Bé giỏi lắm! Bé trả lời đúng rồi! (+1 điểm)' });
-                } else { setFeedbackState({ status: 'wrong', msg: '❌ Chưa đúng rồi, bé hãy kiểm tra lại chữ vừa gõ nhé!' }); }
+                } else { setFeedbackState({ status: 'wrong', msg: '❌ Chưa đúng rồi, bé hãy kiểm tra lại chữ và các dấu câu vừa gõ nhé!' }); }
             };
 
             const nextQuestion = (tab) => {
@@ -376,7 +1711,8 @@
                 <div className="max-w-5xl mx-auto relative w-full">
                     
                     <header className="kid-card p-4 mb-6 flex flex-wrap items-center justify-between gap-3 bg-white shadow-md">
-                        <h1 className="text-xl sm:text-2xl font-black text-emerald-600 flex items-center gap-2"><span>📖</span> Ôn Tập Tiếng Việt 1 Bài 1 - 15</h1>
+                        <h1 className="text-xl sm:text-2xl font-black text-emerald-600 flex items-center gap-2"><span>📖</span> Ôn Tập Tiếng Việt 1 Bài {CLUSTER}</h1>
+<ClusterPicker />
                         <nav className="flex flex-wrap gap-2">
                             <button onClick={() => setActiveTab('p1')} className={`px-3 py-2 rounded-xl font-bold text-sm btn-3d ${activeTab === 'p1' ? 'bg-sky-500 text-white border-sky-700' : 'bg-sky-100 text-sky-600 border-sky-300'}`}>🔊 1. Đánh Vần</button>
                             <button onClick={() => setActiveTab('p2')} className={`px-3 py-2 rounded-xl font-bold text-sm btn-3d ${activeTab === 'p2' ? 'bg-emerald-500 text-white border-emerald-700' : 'bg-emerald-100 text-emerald-600 border-emerald-300'}`}>📖 2. Đọc Câu</button>
@@ -448,10 +1784,11 @@
                                         </div>
                                         <span className="text-emerald-600 font-extrabold">Điểm: {scores.p3}</span>
                                     </div>
-                                    <p className="text-2xl font-black text-slate-700 mb-4">Lắng nghe và gõ lại:</p>
-                                    <button onClick={() => speakText(data.part3[indices.p3], 0.6)} className="mb-8 bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 px-8 rounded-full btn-3d border-purple-800 inline-flex items-center gap-3 text-xl pulse-ring">🔊 Nghe AI đọc lại </button>
+                                    <p className="text-2xl font-black text-slate-700 mb-1">Lắng nghe và gõ lại:</p>
+<p className="text-sm font-bold text-purple-600 mb-4">Nhớ gõ cả dấu câu: chấm . phẩy , chấm hỏi ? chấm than ! hai chấm : ngoặc kép " ba chấm …</p>
+                                    <button onClick={() => speakText(spellPunct(data.part3[indices.p3]), 0.6)} className="mb-8 bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 px-8 rounded-full btn-3d border-purple-800 inline-flex items-center gap-3 text-xl pulse-ring">🔊 Nghe AI đọc lại </button>
                                     <form onSubmit={checkP3Answer} className="space-y-6 w-full mx-auto">
-                                        <input type="text" value={p3Input} onChange={(e) => setP3Input(e.target.value)} placeholder="Gõ câu trả lời..." className="w-full p-6 border-4 border-purple-300 rounded-2xl font-black text-center text-3xl sm:text-4xl text-slate-800 focus:border-purple-600 outline-none shadow-inner" autoFocus />
+                                        <input type="text" value={p3Input} onChange={(e) => setP3Input(e.target.value)} placeholder="Gõ câu trả lời (có cả dấu câu)..." className="p3-input w-full p-6 border-4 border-purple-300 rounded-2xl font-black text-center text-3xl sm:text-4xl text-slate-800 focus:border-purple-600 outline-none shadow-inner" autoFocus />
                                         <button type="submit" className="w-full bg-purple-600 hover:bg-purple-500 text-white font-black py-4 rounded-2xl btn-3d border-purple-800 text-xl">✔️ Kiểm Tra</button>
                                     </form>
                                     {feedbackState.status === 'correct' && <div className="mt-8 p-5 rounded-2xl bg-green-50 border-2 border-green-200"><p className="text-green-600 font-black text-2xl mb-4">{feedbackState.msg}</p><button onClick={() => nextQuestion('p3')} className="bg-green-500 text-white font-bold py-4 px-10 rounded-full btn-3d border-green-700 text-xl">➡️ Tiếp theo (Space)</button></div>}
@@ -602,7 +1939,7 @@
                                     {reviewModal.part === 'p3' && rawPart3Database.map((item, idx) => (
                                         <div key={idx} className={`p-3 rounded-xl border-2 flex justify-between items-center ${completedHistory.p3.includes(item) ? 'bg-green-50 border-green-300' : 'bg-purple-50 border-purple-200'}`}>
                                             <p className={`font-black text-base flex items-center gap-2 ${completedHistory.p3.includes(item) ? 'text-green-700' : 'text-purple-800'}`}>{item} {completedHistory.p3.includes(item) && <span className="text-sm">✅</span>}</p>
-                                            <button onClick={() => speakText(item, 0.6)} className={`${completedHistory.p3.includes(item) ? 'bg-green-500' : 'bg-purple-500'} text-white text-xs px-3 py-1.5 rounded-lg font-bold shrink-0 ml-2`}>🔊 Nghe</button>
+                                            <button onClick={() => speakText(spellPunct(item), 0.6)} className={`${completedHistory.p3.includes(item) ? 'bg-green-500' : 'bg-purple-500'} text-white text-xs px-3 py-1.5 rounded-lg font-bold shrink-0 ml-2`}>🔊 Nghe</button>
                                         </div>
                                     ))}
                                 </div>
@@ -612,9 +1949,13 @@
                 </div>
             );
         };
+        return App;
+        })();
 
+        const BASIC_CLUSTERS = ['1-15', '16-30'];
+        const Root = () => (BASIC_CLUSTERS.includes(CLUSTER) ? <BasicApp /> : <App />);
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        root.render(<Root />);
     </script>
 </body>
 </html>
